@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="theme-color" content="#050505"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="FORGE"/>
+<meta name="description" content="FORGE — Generador de prompts con IA"/>
+<title>FORGE</title>
+<link rel="manifest" href="./manifest.json"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Public+Sans:wght@300;400;700;900&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        'cb':'#050505','cc':'#00f3ff','cm':'#ff00ff',
+        'cdc':'#00666b','cdark':'#050a0e','cgray':'#0a1a1f',
+      },
+      fontFamily: {
+        'orb':['Orbitron','sans-serif'],
+        'mono':['Share Tech Mono','monospace'],
+        'pub':['Public Sans','sans-serif'],
+      },
+      boxShadow: {
+        'nc':'0 0 10px #00f3ff, 0 0 20px #00f3ff',
+        'nm':'0 0 10px #ff00ff, 0 0 20px #ff00ff',
+      }
+    }
+  }
+}
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#050505;color:#00f3ff;font-family:'Share Tech Mono',monospace;overflow-x:hidden}
+
+/* ── SCANLINES ── */
+.scanlines{position:fixed;top:0;left:0;width:100%;height:100%;
+  background:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,0.18) 50%),
+  linear-gradient(90deg,rgba(255,0,0,0.04),rgba(0,255,0,0.01),rgba(0,0,255,0.04));
+  background-size:100% 4px,3px 100%;pointer-events:none;z-index:999}
+
+/* ── ANIMATIONS ── */
+@keyframes sweep{0%{transform:translateY(-100%)}100%{transform:translateY(100%)}}
+@keyframes flicker{0%,19%,21%,23%,25%,54%,56%,100%{opacity:1}20%,22%,24%,55%{opacity:0.4}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes rotate-slow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes progress-fill{from{width:0%}to{width:100%}}
+@keyframes fade-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes splash-out{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.05)}}
+@keyframes app-in{from{opacity:0}to{opacity:1}}
+
+.sweep{position:absolute;top:0;left:0;width:100%;height:100%;
+  background:linear-gradient(to bottom,transparent,rgba(0,243,255,0.07),transparent);
+  animation:sweep 8s linear infinite;pointer-events:none}
+.flicker{animation:flicker 4s infinite}
+.pulse-anim{animation:pulse 2s infinite}
+.rotate-slow{animation:rotate-slow 10s linear infinite}
+.fade-in{animation:fade-in 0.4s ease forwards}
+
+/* ── CYBER ELEMENTS ── */
+.cb-border{border:1px solid #00f3ff;box-shadow:inset 0 0 6px rgba(0,243,255,0.3)}
+.corner-tl{position:relative}
+.corner-tl::before{content:'';position:absolute;top:-2px;left:-2px;width:10px;height:10px;
+  border-top:2px solid #00f3ff;border-left:2px solid #00f3ff}
+.corner-br{position:relative}
+.corner-br::after{content:'';position:absolute;bottom:-2px;right:-2px;width:8px;height:8px;
+  border-right:2px solid #00f3ff;border-bottom:2px solid #00f3ff}
+.clip-main{clip-path:polygon(10% 0,100% 0,100% 70%,90% 100%,0 100%,0 30%)}
+.clip-l{clip-path:polygon(0 0,85% 0,100% 30%,100% 100%,15% 100%,0 70%)}
+.clip-r{clip-path:polygon(15% 0,100% 0,100% 70%,85% 100%,0 100%,0 30%)}
+.clip-fab{clip-path:polygon(20% 0%,100% 0%,100% 100%,0% 100%,0% 20%)}
+.title-glow{text-shadow:0 0 8px rgba(0,243,255,0.8),0 0 15px rgba(255,0,255,0.4)}
+.glitch-text{text-shadow:2px 0 #ff00ff,-2px 0 #00ffff}
+
+/* ── GRID BG ── */
+.grid-bg{background-image:linear-gradient(rgba(0,243,255,0.04) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,243,255,0.04) 1px,transparent 1px);background-size:20px 20px}
+.grid-bg-w{background-image:linear-gradient(to right,rgba(255,255,255,0.02) 1px,transparent 1px),
+  linear-gradient(to bottom,rgba(255,255,255,0.02) 1px,transparent 1px);background-size:40px 40px}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:#050505}
+::-webkit-scrollbar-thumb{background:#00666b}
+
+/* ── OVERLAY / MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:500;
+  display:flex;align-items:center;justify-content:center;padding:1rem}
+.overlay.hidden{display:none}
+.modal{border:2px solid #00f3ff;box-shadow:0 0 20px rgba(0,243,255,0.4),inset 0 0 10px rgba(0,243,255,0.1);
+  background:rgba(5,10,14,0.98);position:relative;overflow:hidden;width:100%;max-width:22rem}
+
+/* ── TOOLTIP ── */
+.tooltip-box{position:absolute;z-index:600;background:#050a0e;border:1px solid #00f3ff;
+  box-shadow:0 0 10px rgba(0,243,255,0.4);padding:.5rem .75rem;font-size:.65rem;
+  line-height:1.5;max-width:220px;color:#fff;top:100%;right:0;margin-top:4px}
+.tooltip-wrap{position:relative;display:inline-block}
+
+/* ── NAV ── */
+.nav-active{color:#00f3ff}
+.nav-inactive{opacity:.35}
+.nav-item-active .nav-icon{border-color:#00f3ff;background:rgba(0,243,255,0.1);
+  box-shadow:0 0 8px rgba(0,243,255,0.4)}
+
+/* ── PAGES ── */
+.page{display:none}
+.page.active{display:block}
+
+/* ── INPUTS ── */
+input:focus,textarea:focus,select:focus{border-color:#00f3ff!important;outline:none;
+  box-shadow:0 0 6px rgba(0,243,255,0.4)}
+input,textarea,select{color:#e5e5e5}
+
+/* ── FOLDER ── */
+.folder-grad{background:linear-gradient(90deg,rgba(0,243,255,0.1) 0%,rgba(5,5,5,0) 100%)}
+.folder-grad-m{background:linear-gradient(90deg,rgba(255,0,255,0.1) 0%,rgba(5,5,5,0) 100%)}
+
+/* ── DESKTOP ── */
+@media(min-width:768px){
+  #page-gen .gen-inner{display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start}
+  #page-gen .gen-left{grid-column:1}
+  #page-gen .gen-right{grid-column:2;position:sticky;top:1rem}
+  .page{max-width:1100px;margin:0 auto}
+  nav.bottom-nav{max-width:1100px;left:50%;transform:translateX(-50%)}
+}
+
+/* ── SPLASH ── */
+#splash{position:fixed;inset:0;background:#050505;z-index:9999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center}
+#splash.hiding{animation:splash-out 0.6s ease forwards}
+#app{opacity:0}
+#app.visible{animation:app-in 0.5s ease 0.1s forwards;opacity:1}
+
+/* ── BATTLE MODE ── */
+.battle-card{border:1px solid #00666b;background:rgba(0,0,0,0.4);position:relative;overflow:hidden;
+  transition:border-color 0.2s,box-shadow 0.2s}
+.battle-card:hover{border-color:#00f3ff;box-shadow:0 0 10px rgba(0,243,255,0.2)}
+.battle-card.selected{border-color:#ff00ff;box-shadow:0 0 15px rgba(255,0,255,0.3)}
+
+/* ── STATS BAR ── */
+.stat-bar{height:2px;background:#00666b;position:relative;overflow:hidden}
+.stat-fill{height:100%;background:linear-gradient(90deg,#00f3ff,#ff00ff);
+  transition:width 0.5s ease}
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+
+<!-- ════════════════════════════════════════
+     SPLASH SCREEN
+════════════════════════════════════════ -->
+<div id="splash">
+  <div class="absolute inset-0 grid-bg-w"></div>
+  <div class="absolute inset-0" style="background:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,0.25) 50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06));background-size:100% 4px,3px 100%;pointer-events:none"></div>
+
+  <!-- ICONO ANIMADO -->
+  <div class="relative w-56 h-56 flex items-center justify-center mb-16">
+    <!-- Rombo magenta estático -->
+    <div class="absolute inset-0 rounded-lg rotate-45 opacity-60" style="border:4px solid #ff00ff;box-shadow:0 0 25px #ff00ff"></div>
+    <!-- Círculo cyan estático -->
+    <div class="absolute inset-6 rounded-full opacity-80" style="border:3px solid #00ffff;box-shadow:0 0 15px #00ffff"></div>
+    <!-- Esfera interior ROTANDO -->
+    <div class="rotate-slow relative w-28 h-28 rounded-full flex items-center justify-center"
+      style="background:linear-gradient(135deg,#00ffff,#8b5cf6,#ff00ff);box-shadow:0 0 40px #00ffff,inset 0 0 20px rgba(255,255,255,0.5)">
+      <svg class="w-full h-full" style="animation:flicker 8s infinite" fill="none" viewBox="0 0 100 100">
+        <path d="M10 50 H90" stroke="white" stroke-dasharray="2 4" stroke-width="0.5"/>
+        <path d="M50 10 V90" stroke="white" stroke-dasharray="2 4" stroke-width="0.5"/>
+        <path d="M30 30 L70 70" stroke="white" stroke-width="1"/>
+        <path d="M70 30 L30 70" stroke="white" stroke-width="1"/>
+        <circle cx="50" cy="50" fill="white" r="4"/>
+        <circle cx="30" cy="30" fill="#00ffff" r="2"/>
+        <circle cx="70" cy="70" fill="#00ffff" r="2"/>
+        <circle cx="70" cy="30" fill="#ff00ff" r="2"/>
+        <circle cx="30" cy="70" fill="#ff00ff" r="2"/>
+      </svg>
+    </div>
+    <!-- Corner accents -->
+    <div class="absolute -top-4 -right-4 w-8 h-8" style="border-top:2px solid #00ffff;border-right:2px solid #00ffff;opacity:0.8"></div>
+    <div class="absolute -bottom-4 -left-4 w-8 h-8" style="border-bottom:2px solid #ff00ff;border-left:2px solid #ff00ff;opacity:0.8"></div>
+  </div>
+
+  <!-- TÍTULO -->
+  <div class="text-center">
+    <h1 class="font-pub text-7xl font-black italic uppercase tracking-tighter glitch-text text-white">FORGE</h1>
+    <div class="h-0.5 w-24 mx-auto mt-2" style="background:#00ffff;box-shadow:0 0 8px #00ffff"></div>
+    <p class="mt-3 text-[10px] tracking-[0.5em] font-bold uppercase" style="color:rgba(0,243,255,0.5)">NEURAL INTERFACE V4.0.2</p>
+    <p class="mt-4 text-xs tracking-widest pulse-anim" style="color:#00ffff">SISTEMA INICIALIZANDO...</p>
+  </div>
+
+  <!-- Decorativo lateral -->
+  <div class="absolute top-1/2 -right-10 -translate-y-1/2 rotate-90 text-[8px] font-mono tracking-[0.4em] whitespace-nowrap" style="color:rgba(255,255,255,0.12)">
+    SECURE_CONNECTION_ESTABLISHED // NODE_01 // AUTH_PENDING
+  </div>
+  <div class="absolute bottom-6 left-6 opacity-10">
+    <svg width="40" height="40" viewBox="0 0 40 40" fill="#00ffff">
+      <rect x="0" y="0" width="8" height="8"/><rect x="10" y="0" width="8" height="8"/>
+      <rect x="20" y="0" width="8" height="8"/><rect x="0" y="10" width="8" height="8"/>
+      <rect x="20" y="10" width="8" height="8"/><rect x="0" y="20" width="8" height="8"/>
+      <rect x="10" y="20" width="8" height="8"/><rect x="20" y="20" width="8" height="8"/>
+    </svg>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     APP PRINCIPAL
+════════════════════════════════════════ -->
+<div id="app">
+
+<!-- ════════════ PÁGINA: GENERAR ════════════ -->
+<div id="page-gen" class="page active pb-24 px-4 pt-4">
+  <header class="mb-5 pt-1">
+    <div class="flex justify-between items-start border-b border-cdc pb-2">
+      <h1 class="font-orb text-2xl font-black italic uppercase leading-tight" style="text-shadow:1px 0 #ff00ff,-1px 0 #00f3ff">
+        FORGE<br><span class="text-white text-sm font-normal tracking-widest">GENERADOR DE PROMPTS</span>
+      </h1>
+      <div class="text-right text-[9px] opacity-40 leading-none mt-1">
+        SYSTEM_VER_4.0.2<br>COORD_X: 77.102<br>COORD_Y: 12.004
+      </div>
+    </div>
+    <div class="w-20 h-0.5 bg-cc mt-1 shadow-nc"></div>
+  </header>
+
+  <div class="gen-inner">
+  <!-- COLUMNA IZQUIERDA -->
+  <div class="gen-left">
+
+    <!-- TIPO DE OUTPUT -->
+    <section class="mb-5">
+      <div class="flex justify-between items-center mb-2">
+        <p class="text-[9px] uppercase tracking-widest opacity-70">Protocolo de salida</p>
+        <!-- CONTADOR DE CAMPOS -->
+        <span id="field-counter" class="text-[9px] text-cm opacity-60">0/5 PARAMS</span>
+      </div>
+      <div class="grid grid-cols-4 gap-2">
+        <button onclick="selectType('TEXTO')" data-type="TEXTO" class="type-btn cb-border py-2 text-[10px] font-bold bg-cc/10 border-b-2 border-b-cc shadow-nc transition-all">TEXTO</button>
+        <button onclick="selectType('IMAGEN')" data-type="IMAGEN" class="type-btn cb-border py-2 text-[10px] font-bold bg-transparent opacity-50 hover:opacity-80 transition-all">IMAGEN</button>
+        <button onclick="selectType('CÓDIGO')" data-type="CÓDIGO" class="type-btn cb-border py-2 text-[10px] font-bold bg-transparent opacity-50 hover:opacity-80 transition-all">CÓDIGO</button>
+        <button onclick="selectType('VÍDEO')" data-type="VÍDEO" class="type-btn cb-border py-2 text-[10px] font-bold bg-transparent opacity-50 hover:opacity-80 transition-all">VÍDEO</button>
+      </div>
+    </section>
+
+    <!-- CAMPOS -->
+    <section class="space-y-4 mb-5">
+
+      <!-- OBJETIVO -->
+      <div class="corner-tl corner-br pt-2">
+        <div class="flex justify-between items-center mb-1">
+          <label class="text-[9px] uppercase tracking-widest">Objetivo <span class="text-cm">*</span></label>
+          <div class="tooltip-wrap">
+            <span class="text-cm cursor-help text-xs hover:text-white transition-colors" onclick="toggleTip('tip-obj')">[?]</span>
+            <div id="tip-obj" class="tooltip-box hidden">Describe qué quieres conseguir. Cuanto más específico, mejor resultado. Ej: "imagen fotorrealista de una ciudad futurista al amanecer con lluvia".</div>
+          </div>
+        </div>
+        <textarea id="f-objetivo" rows="2" placeholder="INTRODUCE TU OBJETIVO PRINCIPAL..."
+          oninput="updateCounter()"
+          class="w-full bg-black/50 border border-cdc p-3 text-xs text-white/90 resize-none transition-all"></textarea>
+      </div>
+
+      <!-- CONTEXTO -->
+      <div class="corner-tl corner-br pt-2">
+        <div class="flex justify-between items-center mb-1">
+          <label class="text-[9px] uppercase tracking-widest opacity-60">Contexto</label>
+          <div class="tooltip-wrap">
+            <span class="text-cm cursor-help text-xs opacity-60 hover:opacity-100 transition-colors" onclick="toggleTip('tip-ctx')">[?]</span>
+            <div id="tip-ctx" class="tooltip-box hidden">¿Para qué se usará el resultado? Ej: "presentación de empresa", "portfolio personal", "post de Instagram". Cuanto más contexto, mejor resultado.</div>
+          </div>
+        </div>
+        <input id="f-contexto" type="text" placeholder="PARÁMETROS DE CONTEXTO..."
+          oninput="updateCounter()"
+          class="w-full bg-black/50 border border-cdc p-3 text-xs transition-all"/>
+      </div>
+
+      <!-- AUDIENCIA -->
+      <div class="corner-tl corner-br pt-2">
+        <div class="flex justify-between items-center mb-1">
+          <label class="text-[9px] uppercase tracking-widest opacity-60">Audiencia</label>
+          <div class="tooltip-wrap">
+            <span class="text-cm cursor-help text-xs opacity-60 hover:opacity-100 transition-colors" onclick="toggleTip('tip-aud')">[?]</span>
+            <div id="tip-aud" class="tooltip-box hidden">¿A quién va dirigido? Ej: "desarrolladores senior", "niños de 8 años", "clientes de lujo". Afecta al tono y vocabulario del resultado.</div>
+          </div>
+        </div>
+        <input id="f-audiencia" type="text" placeholder="IDENTIFICADOR DE AUDIENCIA..."
+          oninput="updateCounter()"
+          class="w-full bg-black/50 border border-cdc p-3 text-xs transition-all"/>
+      </div>
+
+      <!-- FORMATO -->
+      <div class="corner-tl corner-br pt-2">
+        <div class="flex justify-between items-center mb-1">
+          <label class="text-[9px] uppercase tracking-widest opacity-60">Formato de salida</label>
+          <div class="tooltip-wrap">
+            <span class="text-cm cursor-help text-xs opacity-60 hover:opacity-100 transition-colors" onclick="toggleTip('tip-fmt')">[?]</span>
+            <div id="tip-fmt" class="tooltip-box hidden">Longitud, estructura, tono. Ej: "respuesta breve en bullet points", "tono formal", "ratio 16:9 horizontal", "función Python con comentarios".</div>
+          </div>
+        </div>
+        <input id="f-formato" type="text" placeholder="ESPECIFICACIONES DE FORMATO..."
+          oninput="updateCounter()"
+          class="w-full bg-black/50 border border-cdc p-3 text-xs transition-all"/>
+      </div>
+
+      <!-- RESTRICCIONES -->
+      <div class="corner-tl corner-br pt-2">
+        <div class="flex justify-between items-center mb-1">
+          <label class="text-[9px] uppercase tracking-widest opacity-60">Restricciones</label>
+          <div class="tooltip-wrap">
+            <span class="text-cm cursor-help text-xs opacity-60 hover:opacity-100 transition-colors" onclick="toggleTip('tip-res')">[?]</span>
+            <div id="tip-res" class="tooltip-box hidden">Qué evitar y qué incluir sí o sí. Ej: "sin violencia", "debe mencionar el precio", "sin jerga técnica", "solo colores azul y blanco".</div>
+          </div>
+        </div>
+        <input id="f-restricciones" type="text" placeholder="RESTRICCIONES DEL SISTEMA..."
+          oninput="updateCounter()"
+          class="w-full bg-black/50 border border-cdc p-3 text-xs transition-all"/>
+      </div>
+    </section>
+
+    <!-- BOTONES DE ACCIÓN -->
+    <div class="flex gap-2 mb-5">
+      <button onclick="generatePrompt('single')" class="flex-1 bg-cm text-black font-orb font-black py-3 clip-main shadow-nm hover:brightness-125 active:scale-[0.98] transition-all text-xs tracking-widest italic uppercase">
+        Generar Prompt
+      </button>
+      <button onclick="resetFields()" class="cb-border px-3 py-3 text-cc hover:bg-cc/10 transition-colors" title="Limpiar campos">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></svg>
+      </button>
+    </div>
+
+    <!-- MODO BATALLA -->
+    <button onclick="generatePrompt('battle')" class="w-full mb-5 border border-cc/40 text-cc py-2.5 text-[10px] tracking-widest uppercase hover:bg-cc/5 hover:border-cc transition-all font-orb">
+      ⚔ MODO BATALLA — Esencial vs Detallado
+    </button>
+
+  </div><!-- /gen-left -->
+
+  <!-- COLUMNA DERECHA -->
+  <div class="gen-right">
+
+    <!-- OUTPUT ÁREA NORMAL -->
+    <section id="output-area" class="relative cb-border p-4 bg-black/40 mb-4 hidden">
+      <div class="sweep"></div>
+      <div class="flex justify-between items-start mb-3">
+        <div class="text-[9px] uppercase border-l-2 border-cc pl-2">Estado: RESULTADO_DESCIFRADO</div>
+        <div class="text-[9px] text-cm pulse-anim" id="output-key">ENCRYPT_KEY: #A1-00</div>
+      </div>
+      <div id="output-text" contenteditable="true"
+        class="text-xs leading-relaxed text-white/90 min-h-[60px] max-h-52 overflow-y-auto italic border-b border-cdc/30 pb-3 mb-3 outline-none focus:bg-cc/5 transition-colors"></div>
+      <!-- STATS -->
+      <div class="flex gap-4 mb-3">
+        <span id="stat-chars" class="text-[8px] opacity-40">0 CHARS</span>
+        <span id="stat-words" class="text-[8px] opacity-40">0 PALABRAS</span>
+      </div>
+      <!-- HISTORIAL -->
+      <div id="history-nav" class="hidden flex items-center gap-2 mb-3">
+        <button onclick="historyBack()" class="text-[9px] border border-cdc px-2 py-0.5 hover:border-cc transition-colors">◀</button>
+        <span id="history-pos" class="text-[9px] opacity-50">1/1</span>
+        <button onclick="historyFwd()" class="text-[9px] border border-cdc px-2 py-0.5 hover:border-cc transition-colors">▶</button>
+        <span class="text-[8px] opacity-30 ml-1">HISTORIAL</span>
+      </div>
+      <!-- BOTONES -->
+      <div class="grid grid-cols-4 gap-1">
+        <button onclick="copyPrompt()" class="flex flex-col items-center gap-1 opacity-60 hover:opacity-100 transition-opacity group">
+          <div class="p-2 border border-cdc bg-black group-hover:border-cc transition-colors">
+            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+          </div>
+          <span class="text-[8px] uppercase">Copiar</span>
+        </button>
+        <button onclick="openExplain()" class="flex flex-col items-center gap-1 opacity-60 hover:opacity-100 transition-opacity group">
+          <div class="p-2 border border-cdc bg-black group-hover:border-cc transition-colors">
+            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/></svg>
+          </div>
+          <span class="text-[8px] uppercase">Explicar</span>
+        </button>
+        <button onclick="openSave()" class="flex flex-col items-center gap-1 opacity-60 hover:opacity-100 transition-opacity group">
+          <div class="p-2 border border-cdc bg-black group-hover:border-cm transition-colors">
+            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+          </div>
+          <span class="text-[8px] uppercase">Copiar+Guardar</span>
+        </button>
+        <button onclick="openRegen()" class="flex flex-col items-center gap-1 opacity-60 hover:opacity-100 transition-opacity group">
+          <div class="p-2 border border-cdc bg-black group-hover:border-cc transition-colors">
+            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          </div>
+          <span class="text-[8px] uppercase">Refinar</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- OUTPUT BATALLA -->
+    <section id="battle-area" class="hidden space-y-3 mb-4">
+      <div class="text-[9px] uppercase border-l-2 border-cm pl-2 mb-2">MODO BATALLA — Elige tu versión</div>
+      <!-- ESENCIAL -->
+      <div id="battle-a" class="battle-card p-4 cursor-pointer" onclick="selectBattle('a')">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-[9px] text-cc font-bold uppercase tracking-widest">⚡ Versión Esencial</span>
+          <span class="text-[8px] opacity-40">CONCISO</span>
+        </div>
+        <div id="battle-text-a" class="text-xs text-white/80 italic leading-relaxed min-h-[40px]"></div>
+        <div class="mt-2 stat-bar"><div id="battle-bar-a" class="stat-fill" style="width:0%"></div></div>
+      </div>
+      <!-- DETALLADO -->
+      <div id="battle-b" class="battle-card p-4 cursor-pointer" onclick="selectBattle('b')">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-[9px] text-cm font-bold uppercase tracking-widest">🔥 Versión Detallada</span>
+          <span class="text-[8px] opacity-40">PROFUNDO</span>
+        </div>
+        <div id="battle-text-b" class="text-xs text-white/80 italic leading-relaxed min-h-[40px]"></div>
+        <div class="mt-2 stat-bar"><div id="battle-bar-b" class="stat-fill" style="width:0%"></div></div>
+      </div>
+      <div id="battle-actions" class="hidden grid grid-cols-2 gap-2 mt-2">
+        <button onclick="useBattleResult()" class="bg-cm text-black font-orb font-bold py-2 text-xs tracking-widest clip-r shadow-nm hover:brightness-125">USAR SELECCIONADA</button>
+        <button onclick="closeBattle()" class="border border-cc text-cc font-orb py-2 text-xs tracking-widest clip-l hover:bg-cc/10">CANCELAR</button>
+      </div>
+    </section>
+
+  </div><!-- /gen-right -->
+  </div><!-- /gen-inner -->
+</div>
+
+<!-- ════════════ PÁGINA: ARCHIVO ════════════ -->
+<div id="page-lib" class="page pb-24">
+  <header class="sticky top-0 z-40 px-4 pt-4 pb-2 bg-cb/95 border-b border-cc/20 flex justify-between items-center">
+    <div>
+      <span class="text-[9px] opacity-40">SYSTEM_CORE: ACTIVO</span>
+      <h1 class="font-orb text-lg font-bold italic uppercase tracking-widest">ARCHIVO</h1>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="exportLibrary()" class="text-[9px] border border-cdc px-2 py-1 hover:border-cc transition-colors" title="Exportar">
+        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+      </button>
+      <div class="text-[9px] text-right opacity-30">COORD_X: 42.083</div>
+    </div>
+  </header>
+
+  <!-- BUSCADOR -->
+  <div class="px-4 pt-3 pb-1">
+    <div class="relative">
+      <input id="lib-search" type="text" placeholder="BUSCAR SECUENCIAS..." oninput="renderLibrary()"
+        class="w-full bg-black/50 border border-cdc p-2 pl-8 text-xs transition-all"/>
+      <svg class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>
+    </div>
+  </div>
+
+  <div id="lib-content" class="px-4 pt-3 space-y-6 pb-4"></div>
+
+  <button onclick="openNewFolder()" class="fixed bottom-24 right-4 w-12 h-12 bg-cm shadow-nm flex items-center justify-center text-white active:scale-95 transition-transform clip-fab z-40">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>
+  </button>
+</div>
+
+<!-- ════════════ PÁGINA: ANALIZAR ════════════ -->
+<div id="page-analyze" class="page pb-24 px-4 pt-4">
+  <header class="mb-5 pt-1">
+    <div class="flex justify-between items-start border-b border-cdc pb-2">
+      <h1 class="font-orb text-xl font-black italic uppercase leading-tight title-glow">
+        ANALIZAR<br><span class="text-white text-xs font-normal tracking-widest">PUNTÚA TU PROMPT</span>
+      </h1>
+      <div class="text-right text-[9px] opacity-40">COORD_X: 55.201<br>COORD_Y: 33.442</div>
+    </div>
+    <div class="w-16 h-0.5 bg-cm mt-1 shadow-nm"></div>
+  </header>
+
+  <div class="corner-tl corner-br pt-2 mb-4">
+    <div class="flex justify-between items-center mb-1">
+      <label class="text-[9px] uppercase tracking-widest">Tu prompt</label>
+      <span class="text-[9px] opacity-40">PEGA O ESCRIBE</span>
+    </div>
+    <textarea id="analyze-input" rows="5" placeholder="PEGA AQUÍ EL PROMPT QUE QUIERES ANALIZAR..."
+      class="w-full bg-black/50 border border-cdc p-3 text-xs text-white/90 resize-none transition-all"></textarea>
+  </div>
+
+  <button onclick="analyzePrompt()" class="w-full bg-cm text-black font-orb font-black py-3 clip-main shadow-nm hover:brightness-125 active:scale-[0.98] transition-all text-xs tracking-widest italic uppercase mb-5">
+    Analizar Prompt
+  </button>
+
+  <section id="analyze-result" class="hidden">
+    <div class="relative cb-border p-4 bg-black/40">
+      <div class="sweep"></div>
+      <!-- PUNTUACIÓN -->
+      <div class="flex items-center gap-4 mb-4 border-b border-cdc/30 pb-4">
+        <div class="text-center">
+          <div id="analyze-score" class="font-orb text-4xl font-black text-cm title-glow">0</div>
+          <div class="text-[8px] opacity-40 uppercase tracking-widest">/10</div>
+        </div>
+        <div class="flex-1">
+          <div class="text-[9px] uppercase tracking-widest mb-1 opacity-60">Puntuación Neural</div>
+          <div class="stat-bar"><div id="analyze-bar" class="stat-fill" style="width:0%"></div></div>
+          <div id="analyze-label" class="text-[9px] text-cm mt-1"></div>
+        </div>
+      </div>
+      <!-- ANÁLISIS -->
+      <div class="border-l-2 border-cm/50 pl-3 py-1 bg-cm/5 mb-3">
+        <p class="text-[9px] text-cm uppercase font-bold mb-1">Diagnóstico:</p>
+        <p id="analyze-feedback" class="text-xs text-white/80 leading-relaxed"></p>
+      </div>
+      <!-- MEJORAS -->
+      <div class="border-l-2 border-cc/50 pl-3 py-1 bg-cc/5">
+        <p class="text-[9px] text-cc uppercase font-bold mb-1">Mejoras sugeridas:</p>
+        <p id="analyze-improvements" class="text-xs text-white/80 leading-relaxed"></p>
+      </div>
+      <div class="mt-4 flex gap-2">
+        <button onclick="sendToGenerator()" class="flex-1 bg-cm text-black font-orb font-bold py-2 text-xs tracking-widest clip-r shadow-nm hover:brightness-125">MEJORAR EN GENERADOR</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ════════════ PÁGINA: INVERTIR ════════════ -->
+<div id="page-reverse" class="page pb-24 px-4 pt-4">
+  <header class="mb-5 pt-1">
+    <div class="flex justify-between items-start border-b border-cdc pb-2">
+      <h1 class="font-orb text-xl font-black italic uppercase leading-tight title-glow">
+        INVERTIR<br><span class="text-white text-xs font-normal tracking-widest">OUTPUT → PROMPT</span>
+      </h1>
+      <div class="text-right text-[9px] opacity-40">COORD_X: 88.334<br>COORD_Y: 21.005</div>
+    </div>
+    <div class="w-16 h-0.5 bg-cc mt-1 shadow-nc"></div>
+  </header>
+
+  <p class="text-[10px] opacity-50 mb-4 leading-relaxed">Pega el resultado que obtuviste de una IA y deduciremos qué prompt se usó para generarlo, optimizándolo para que puedas reutilizarlo.</p>
+
+  <div class="corner-tl corner-br pt-2 mb-4">
+    <div class="flex justify-between items-center mb-1">
+      <label class="text-[9px] uppercase tracking-widest">Output recibido</label>
+      <span class="text-[9px] opacity-40">CUALQUIER TIPO</span>
+    </div>
+    <textarea id="reverse-input" rows="6" placeholder="PEGA AQUÍ EL RESULTADO QUE RECIBISTE DE LA IA..."
+      class="w-full bg-black/50 border border-cdc p-3 text-xs text-white/90 resize-none transition-all"></textarea>
+  </div>
+
+  <button onclick="reversePrompt()" class="w-full bg-cm text-black font-orb font-black py-3 clip-main shadow-nm hover:brightness-125 active:scale-[0.98] transition-all text-xs tracking-widest italic uppercase mb-5">
+    Deducir Prompt
+  </button>
+
+  <section id="reverse-result" class="hidden">
+    <div class="relative cb-border p-4 bg-black/40">
+      <div class="sweep"></div>
+      <div class="flex justify-between items-start mb-3">
+        <div class="text-[9px] uppercase border-l-2 border-cc pl-2">Prompt Deducido y Optimizado</div>
+        <div class="text-[9px] text-cm pulse-anim">REVERSE_ENGINEERED</div>
+      </div>
+      <div id="reverse-text" class="text-xs leading-relaxed text-white/90 italic border-b border-cdc/30 pb-3 mb-3 min-h-[60px]"></div>
+      <div class="flex gap-2">
+        <button onclick="copyReverse()" class="flex-1 border border-cc text-cc font-orb py-2 text-xs tracking-widest clip-l hover:bg-cc/10">COPIAR</button>
+        <button onclick="sendReverseToGenerator()" class="flex-1 bg-cm text-black font-orb font-bold py-2 text-xs tracking-widest clip-r shadow-nm hover:brightness-125">USAR EN GENERADOR</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ════════════════════════════════════════
+     NAVEGACIÓN INFERIOR
+════════════════════════════════════════ -->
+<nav class="bottom-nav fixed bottom-0 left-0 w-full bg-black/96 border-t-2 border-cc z-50 flex justify-around items-center py-2 px-1">
+  <button onclick="showPage('gen')" id="nav-gen" class="flex flex-col items-center gap-0.5 nav-active transition-all px-2">
+    <div class="nav-icon w-7 h-7 border border-cc bg-cc/10 flex items-center justify-center transition-all">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>
+    </div>
+    <span class="text-[7px] font-bold uppercase tracking-widest">Generar</span>
+  </button>
+  <button onclick="showPage('lib')" id="nav-lib" class="flex flex-col items-center gap-0.5 nav-inactive transition-all px-2">
+    <div class="nav-icon w-7 h-7 border border-cdc flex items-center justify-center transition-all">
+      <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h16v2H4V4zm0 5h16v2H4V9zm0 5h16v2H4v-2zm0 5h16v2H4v-2z"/></svg>
+    </div>
+    <span class="text-[7px] uppercase tracking-widest">Archivo</span>
+  </button>
+  <button onclick="showPage('analyze')" id="nav-analyze" class="flex flex-col items-center gap-0.5 nav-inactive transition-all px-2">
+    <div class="nav-icon w-7 h-7 border border-cdc flex items-center justify-center transition-all">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></svg>
+    </div>
+    <span class="text-[7px] uppercase tracking-widest">Analizar</span>
+  </button>
+  <button onclick="showPage('reverse')" id="nav-reverse" class="flex flex-col items-center gap-0.5 nav-inactive transition-all px-2">
+    <div class="nav-icon w-7 h-7 border border-cdc flex items-center justify-center transition-all">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></svg>
+    </div>
+    <span class="text-[7px] uppercase tracking-widest">Invertir</span>
+  </button>
+</nav>
+
+<!-- ════════════════════════════════════════
+     MODALES
+════════════════════════════════════════ -->
+
+<!-- EXPLAIN -->
+<div id="modal-explain" class="overlay hidden" onclick="closeModalOutside(event,'modal-explain')">
+  <div class="modal grid-bg p-6">
+    <div class="sweep"></div>
+    <div class="flex justify-between items-start mb-4">
+      <div>
+        <h2 class="font-orb text-lg font-black italic text-cc title-glow uppercase">LÓGICA NEURAL</h2>
+        <div class="h-0.5 w-16 bg-cc mt-1 shadow-nc"></div>
+      </div>
+      <button onclick="closeModal('modal-explain')" class="text-cc opacity-40 hover:opacity-100 text-sm">✕</button>
+    </div>
+    <p class="text-xs text-cc/70 mb-3">Secuencia de razonamiento iniciada. Analizando decisiones de diseño del prompt.</p>
+    <div class="border-l-2 border-cm/50 pl-3 py-2 bg-cm/5 mb-4">
+      <p class="text-[9px] text-cm uppercase font-bold mb-1">Flujo Lógico:</p>
+      <p id="explain-text" class="text-xs text-white/80 italic leading-relaxed whitespace-pre-line"></p>
+    </div>
+    <p class="text-[9px] text-cc/60">Estado del sistema: <span class="text-cc pulse-anim">OPTIMIZADO</span></p>
+    <div class="border-t border-cc/20 mt-5 pt-4 flex justify-center">
+      <button onclick="closeModal('modal-explain')" class="clip-l bg-cm text-black font-orb font-bold py-2 px-8 text-xs tracking-widest shadow-nm hover:brightness-125">ENTENDIDO</button>
+    </div>
+    <div class="flex justify-between items-end mt-4">
+      <div class="flex gap-1"><div class="w-0.5 h-5 bg-cc/30"></div><div class="w-0.5 h-3 bg-cc/30"></div><div class="w-0.5 h-5 bg-cc/30"></div></div>
+      <span class="text-[8px] text-cc/20">SYS_LOG_ID: {{4492-X}}</span>
+    </div>
+  </div>
+</div>
+
+<!-- SAVE -->
+<div id="modal-save" class="overlay hidden" onclick="closeModalOutside(event,'modal-save')">
+  <div class="modal p-6">
+    <div class="sweep"></div>
+    <div class="absolute top-2 right-3 text-[9px] opacity-30 font-mono">COORD_X: 42.083<br>COORD_Y: 19.991</div>
+    <h2 class="font-orb text-2xl font-bold italic text-cc flicker uppercase tracking-widest mb-1">GUARDAR<br>SECUENCIA</h2>
+    <div class="h-0.5 w-10 bg-cc mb-4 shadow-nc"></div>
+    <p class="text-xs opacity-60 mb-4 leading-relaxed">Almacena tu prompt en el archivo central.<br>Slot: <span class="font-mono text-cc" id="save-slot">#A1-00</span></p>
+    <div class="mb-4">
+      <div class="flex items-center gap-2 mb-1">
+        <div class="w-1.5 h-1.5 border-l border-t border-cc"></div>
+        <label class="text-[9px] font-mono uppercase tracking-widest text-cc">Nombre</label>
+      </div>
+      <div class="corner-br relative">
+        <input id="save-name" type="text" placeholder="NOMBRE DEL PROMPT..."
+          class="w-full bg-transparent border border-cc/40 p-3 font-mono text-xs placeholder-cc/30 transition-all"/>
+      </div>
+    </div>
+    <div class="mb-2">
+      <div class="flex items-center gap-2 mb-1">
+        <div class="w-1.5 h-1.5 border-l border-t border-cc"></div>
+        <label class="text-[9px] font-mono uppercase tracking-widest text-cc">Carpeta</label>
+      </div>
+      <div class="relative">
+        <select id="save-folder" class="w-full bg-cgray border border-cc/40 p-3 font-mono text-xs appearance-none focus:border-cc outline-none transition-all"></select>
+        <span class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-cc text-xs">▼</span>
+      </div>
+      <div class="text-right mt-1">
+        <button onclick="openNewFolder(true)" class="text-[9px] font-mono text-cm hover:underline uppercase tracking-widest">[+] Nueva Carpeta</button>
+      </div>
+    </div>
+    <div class="border-t border-cc/20 my-4"></div>
+    <div class="flex gap-3">
+      <button onclick="closeModal('modal-save')" class="flex-1 border border-cc text-cc font-orb py-2.5 text-xs tracking-widest hover:bg-cc/10 clip-l">CANCELAR</button>
+      <button onclick="confirmSave()" class="flex-1 bg-cm text-black font-orb font-bold py-2.5 text-xs tracking-widest shadow-nm clip-r hover:brightness-125">CONFIRMAR</button>
+    </div>
+    <div class="flex justify-between items-end mt-4">
+      <div class="flex gap-1"><div class="w-0.5 h-5 bg-cc/30"></div><div class="w-0.5 h-3 bg-cc/30"></div><div class="w-0.5 h-5 bg-cc/30"></div></div>
+      <span class="text-[8px] text-cc/20 font-mono">STATUS: READY_FOR_SYNC...</span>
+    </div>
+  </div>
+</div>
+
+<!-- REGEN -->
+<div id="modal-regen" class="overlay hidden" onclick="closeModalOutside(event,'modal-regen')">
+  <div class="modal p-6">
+    <div class="sweep"></div>
+    <h2 class="font-orb text-xl font-bold italic text-cc uppercase tracking-widest mb-1">REFINAR<br>SECUENCIA</h2>
+    <div class="h-0.5 w-10 bg-cc mb-4 shadow-nc"></div>
+    <p class="text-[10px] opacity-50 mb-4">Indica qué no te ha convencido. El sistema refinará el prompt manteniendo tus parámetros originales.</p>
+    <div class="mb-4">
+      <div class="flex items-center gap-2 mb-1">
+        <div class="w-1.5 h-1.5 border-l border-t border-cc"></div>
+        <label class="text-[9px] uppercase tracking-widest text-cc">Feedback</label>
+      </div>
+      <textarea id="regen-feedback" rows="4" placeholder="DESCRIBE QUÉ QUIERES CAMBIAR..."
+        class="w-full bg-black/50 border border-cc/40 p-3 text-xs text-white/90 resize-none transition-all"></textarea>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="closeModal('modal-regen')" class="flex-1 border border-cc text-cc font-orb py-2.5 text-xs tracking-widest hover:bg-cc/10 clip-l">CANCELAR</button>
+      <button onclick="executeRegen()" class="flex-1 bg-cm text-black font-orb font-bold py-2.5 text-xs tracking-widest shadow-nm clip-r hover:brightness-125">EJECUTAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW FOLDER -->
+<div id="modal-folder" class="overlay hidden" onclick="closeModalOutside(event,'modal-folder')">
+  <div class="modal p-6">
+    <div class="sweep"></div>
+    <h2 class="font-orb text-xl font-bold italic text-cc uppercase tracking-widest mb-1">NUEVA CARPETA</h2>
+    <div class="h-0.5 w-10 bg-cc mb-4 shadow-nc"></div>
+    <div class="mb-5">
+      <div class="flex items-center gap-2 mb-1">
+        <div class="w-1.5 h-1.5 border-l border-t border-cc"></div>
+        <label class="text-[9px] uppercase tracking-widest text-cc">Nombre</label>
+      </div>
+      <input id="folder-name" type="text" placeholder="NOMBRE DE LA CARPETA..."
+        class="w-full bg-transparent border border-cc/40 p-3 font-mono text-xs placeholder-cc/30 transition-all"/>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="closeModal('modal-folder')" class="flex-1 border border-cc text-cc font-orb py-2.5 text-xs tracking-widest hover:bg-cc/10 clip-l">CANCELAR</button>
+      <button onclick="confirmNewFolder()" class="flex-1 bg-cm text-black font-orb font-bold py-2.5 text-xs tracking-widest shadow-nm clip-r hover:brightness-125">CREAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW PROMPT -->
+<div id="modal-view" class="overlay hidden" onclick="closeModalOutside(event,'modal-view')">
+  <div class="modal grid-bg p-6">
+    <div class="sweep"></div>
+    <div class="flex justify-between items-start mb-3">
+      <div>
+        <p class="text-[9px] opacity-30">SECUENCIA_CARGADA</p>
+        <h2 id="view-title" class="font-orb text-base font-bold italic text-cc uppercase tracking-wide"></h2>
+      </div>
+      <button onclick="closeModal('modal-view')" class="text-cc opacity-40 hover:opacity-100 text-sm">✕</button>
+    </div>
+    <div class="h-0.5 w-12 bg-cc mb-4 shadow-nc"></div>
+    <div id="view-text" contenteditable="true"
+      class="text-xs text-white/85 italic leading-relaxed max-h-52 overflow-y-auto border border-cc/20 bg-black/30 p-3 mb-4 outline-none focus:bg-cc/5 transition-colors"></div>
+    <div class="flex gap-2 mb-2">
+      <button onclick="copyViewPrompt()" class="flex-1 border border-cc text-cc font-orb py-2 text-xs tracking-widest hover:bg-cc/10 clip-l">COPIAR</button>
+      <button onclick="saveEditedView()" class="flex-1 bg-cm text-black font-orb font-bold py-2 text-xs tracking-widest shadow-nm clip-r hover:brightness-125">GUARDAR EDICIÓN</button>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="sharePrompt()" class="flex-1 border border-cdc text-cc/60 font-orb py-2 text-xs tracking-widest hover:border-cc hover:text-cc clip-l">COMPARTIR</button>
+      <button onclick="duplicatePrompt()" class="flex-1 border border-cdc text-cc/60 font-orb py-2 text-xs tracking-widest hover:border-cc hover:text-cc clip-r">DUPLICAR</button>
+    </div>
+    <button onclick="deletePrompt()" class="w-full mt-2 border border-red-900/50 text-red-500/60 font-orb py-1.5 text-[9px] tracking-widest hover:border-red-500 hover:text-red-400 transition-colors">
+      ELIMINAR SECUENCIA
+    </button>
+  </div>
+</div>
+
+<!-- RENAME FOLDER -->
+<div id="modal-rename" class="overlay hidden" onclick="closeModalOutside(event,'modal-rename')">
+  <div class="modal p-6">
+    <div class="sweep"></div>
+    <h2 class="font-orb text-xl font-bold italic text-cc uppercase tracking-widest mb-1">RENOMBRAR<br>CARPETA</h2>
+    <div class="h-0.5 w-10 bg-cc mb-4 shadow-nc"></div>
+    <input id="rename-input" type="text" placeholder="NUEVO NOMBRE..."
+      class="w-full bg-transparent border border-cc/40 p-3 font-mono text-xs placeholder-cc/30 mb-4 transition-all"/>
+    <div class="flex gap-3">
+      <button onclick="closeModal('modal-rename')" class="flex-1 border border-cc text-cc font-orb py-2.5 text-xs tracking-widest hover:bg-cc/10 clip-l">CANCELAR</button>
+      <button onclick="confirmRename()" class="flex-1 bg-cm text-black font-orb font-bold py-2.5 text-xs tracking-widest shadow-nm clip-r hover:brightness-125">RENOMBRAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-[1000] hidden">
+  <div class="bg-cc text-black font-orb font-bold text-xs px-4 py-2 tracking-widest clip-main shadow-nc">
+    <span id="toast-msg">OK</span>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<!-- ════════════════════════════════════════
+     MANIFEST PWA (inline)
+════════════════════════════════════════ -->
+<script>
+</script>
+
+<script>
+// ════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════
+const WORKER = 'https://grokapi.joniturbu.workers.dev';
+let currentType = 'TEXTO';
+let currentPrompt = '';
+let currentExplanation = '';
+let currentViewPrompt = '';
+let viewingPromptId = null;
+let renamingFolderName = null;
+let newFolderFromSave = false;
+let battleSelected = null;
+let battleA = '';
+let battleB = '';
+let promptCounter = 0;
+let toastTimer = null;
+
+// Historial de generaciones (sesión)
+let promptHistory = [];
+let historyIndex = -1;
+
+// Biblioteca con persistencia
+let folders = loadFolders();
+
+function loadFolders() {
+  try {
+    const saved = localStorage.getItem('forge_folders');
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return [{ name: 'GENERAL', prompts: [] }];
+}
+function saveFolders() {
+  try { localStorage.setItem('forge_folders', JSON.stringify(folders)); } catch(e) {}
+}
+
+// ════════════════════════════════════════
+// SPLASH
+// ════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    const splash = document.getElementById('splash');
+    const app = document.getElementById('app');
+    splash.classList.add('hiding');
+    setTimeout(() => {
+      splash.style.display = 'none';
+      app.classList.add('visible');
+    }, 600);
+  }, 3000);
+});
+
+// ════════════════════════════════════════
+// GROQ API
+// ════════════════════════════════════════
+async function callGroq(messages, maxTokens = 1024, temperature = 0.7) {
+  const res = await fetch(WORKER, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages, max_tokens: maxTokens, temperature })
+  });
+  if (!res.ok) throw new Error('API error ' + res.status);
+  const data = await res.json();
+  const content = data.choices?.[0]?.message?.content?.trim();
+  if (!content) throw new Error('Respuesta vacía');
+  return content;
+}
+
+// ════════════════════════════════════════
+// TIPO DE OUTPUT
+// ════════════════════════════════════════
+function selectType(type) {
+  currentType = type;
+  document.querySelectorAll('.type-btn').forEach(b => {
+    const active = b.dataset.type === type;
+    b.classList.toggle('bg-cc/10', active);
+    b.classList.toggle('border-b-2', active);
+    b.classList.toggle('border-b-cc', active);
+    b.classList.toggle('shadow-nc', active);
+    b.classList.toggle('opacity-50', !active);
+    b.classList.toggle('bg-transparent', !active);
+  });
+}
+
+// ════════════════════════════════════════
+// CONTADOR DE CAMPOS
+// ════════════════════════════════════════
+function updateCounter() {
+  const fields = ['f-objetivo','f-contexto','f-audiencia','f-formato','f-restricciones'];
+  const filled = fields.filter(id => document.getElementById(id).value.trim()).length;
+  const el = document.getElementById('field-counter');
+  el.textContent = filled + '/5 PARAMS';
+  el.style.opacity = filled > 0 ? '1' : '0.4';
+  if (filled >= 4) el.style.color = '#00f3ff';
+  else if (filled >= 2) el.style.color = '#ff00ff';
+  else el.style.color = '#ff00ff';
+}
+
+// ════════════════════════════════════════
+// RESET CAMPOS
+// ════════════════════════════════════════
+function resetFields() {
+  ['f-objetivo','f-contexto','f-audiencia','f-formato','f-restricciones'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  updateCounter();
+  document.getElementById('output-area').classList.add('hidden');
+  document.getElementById('battle-area').classList.add('hidden');
+  currentPrompt = '';
+  currentExplanation = '';
+  showToast('CAMPOS LIMPIADOS');
+}
+
+// ════════════════════════════════════════
+// GENERAR PROMPT
+// ════════════════════════════════════════
+async function generatePrompt(mode = 'single') {
+  const objetivo = document.getElementById('f-objetivo').value.trim();
+  if (!objetivo) { showToast('OBJETIVO REQUERIDO'); return; }
+
+  const contexto = document.getElementById('f-contexto').value.trim();
+  const audiencia = document.getElementById('f-audiencia').value.trim();
+  const formato = document.getElementById('f-formato').value.trim();
+  const restricciones = document.getElementById('f-restricciones').value.trim();
+
+  const typeMap = { TEXTO:'texto escrito', IMAGEN:'imagen generada por IA', CÓDIGO:'código', VÍDEO:'vídeo' };
+  let userBase = `Objetivo: ${objetivo}`;
+  if (contexto) userBase += `\nContexto: ${contexto}`;
+  if (audiencia) userBase += `\nAudiencia: ${audiencia}`;
+  if (formato) userBase += `\nFormato: ${formato}`;
+  if (restricciones) userBase += `\nRestricciones: ${restricciones}`;
+
+  const systemBase = `Eres un experto en prompt engineering. Tu tarea es generar prompts optimizados para IAs.
+Reglas absolutas:
+- Devuelve ÚNICAMENTE el prompt, sin introducción, sin explicación, sin comillas envolventes
+- Para IMAGEN: incluye estilo visual, iluminación, composición, calidad técnica, ratio
+- Para CÓDIGO: incluye lenguaje, estructura, manejo de errores, casos edge
+- Para TEXTO: incluye tono, estructura, longitud aproximada, perspectiva
+- Para VÍDEO: incluye estilo, ritmo, elementos visuales, duración
+- El prompt debe estar en el idioma más apropiado (inglés para imagen/código, español para texto si el objetivo está en español)`;
+
+  // UI: loading
+  setLoading(true, mode);
+
+  try {
+    if (mode === 'single') {
+      const prompt = await callGroq([
+        { role: 'system', content: systemBase },
+        { role: 'user', content: `Genera el mejor prompt posible para obtener ${typeMap[currentType]}:\n\n${userBase}\n\nDevuelve SOLO el prompt optimizado.` }
+      ]);
+
+      const explanation = await callGroq([
+        { role: 'system', content: 'Eres un experto en prompt engineering. Explica en 3-5 puntos por qué el prompt está estructurado así. Sé directo y técnico. En español.' },
+        { role: 'user', content: `Prompt generado: "${prompt}"\n\nExplica las decisiones de diseño.` }
+      ], 512, 0.5);
+
+      currentPrompt = prompt;
+      currentExplanation = explanation;
+      addToHistory(prompt);
+      setLoading(false, mode);
+      showSingleOutput(prompt);
+
+    } else {
+      // BATALLA: dos llamadas en paralelo
+      const [pA, pB] = await Promise.all([
+        callGroq([
+          { role: 'system', content: systemBase },
+          { role: 'user', content: `Genera un prompt ESENCIAL y conciso (máximo 3 frases) para obtener ${typeMap[currentType]}:\n\n${userBase}\n\nDevuelve SOLO el prompt esencial.` }
+        ]),
+        callGroq([
+          { role: 'system', content: systemBase },
+          { role: 'user', content: `Genera un prompt MUY DETALLADO y profundo (mínimo 5 frases, con todos los matices posibles) para obtener ${typeMap[currentType]}:\n\n${userBase}\n\nDevuelve SOLO el prompt detallado y exhaustivo.` }
+        ])
+      ]);
+
+      battleA = pA;
+      battleB = pB;
+      setLoading(false, mode);
+      showBattleOutput(pA, pB);
+    }
+
+  } catch(err) {
+    setLoading(false, mode);
+    showToast('ERROR DE CONEXIÓN');
+    console.error(err);
+  }
+}
+
+function setLoading(on, mode) {
+  const genBtns = document.querySelectorAll('button[onclick*="generatePrompt"]');
+  genBtns.forEach(b => { b.disabled = on; b.classList.toggle('opacity-50', on); });
+
+  if (mode === 'single') {
+    const area = document.getElementById('output-area');
+    const textEl = document.getElementById('output-text');
+    if (on) {
+      area.classList.remove('hidden');
+      document.getElementById('battle-area').classList.add('hidden');
+      textEl.textContent = 'PROCESANDO SECUENCIA NEURAL...';
+      textEl.classList.add('pulse-anim');
+      document.getElementById('output-key').textContent = 'ENCRYPT_KEY: GENERANDO...';
+    } else {
+      textEl.classList.remove('pulse-anim');
+    }
+  } else {
+    const area = document.getElementById('battle-area');
+    if (on) {
+      area.classList.remove('hidden');
+      document.getElementById('output-area').classList.add('hidden');
+      document.getElementById('battle-text-a').textContent = 'GENERANDO...';
+      document.getElementById('battle-text-b').textContent = 'GENERANDO...';
+      document.getElementById('battle-actions').classList.add('hidden');
+      battleSelected = null;
+    }
+  }
+}
+
+function showSingleOutput(prompt) {
+  promptCounter++;
+  const keyId = '#A' + promptCounter + '-' + (Math.floor(Math.random()*90)+10);
+  document.getElementById('output-key').textContent = 'ENCRYPT_KEY: ' + keyId;
+  typeText(document.getElementById('output-text'), prompt, () => updateStats(prompt));
+  document.getElementById('output-area').classList.remove('hidden');
+  document.getElementById('output-area').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function showBattleOutput(pA, pB) {
+  typeText(document.getElementById('battle-text-a'), pA, () => {
+    document.getElementById('battle-bar-a').style.width = Math.min(100, Math.round(pA.length/3)) + '%';
+  });
+  typeText(document.getElementById('battle-text-b'), pB, () => {
+    document.getElementById('battle-bar-b').style.width = Math.min(100, Math.round(pB.length/3)) + '%';
+  });
+  document.getElementById('battle-actions').classList.remove('hidden');
+  document.getElementById('battle-area').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function typeText(el, text, onDone) {
+  el.textContent = '';
+  let i = 0;
+  function tick() {
+    if (i < text.length) {
+      el.textContent += text.charAt(i++);
+      setTimeout(tick, 8);
+    } else if (onDone) onDone();
+  }
+  tick();
+}
+
+function updateStats(text) {
+  const chars = text.length;
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  document.getElementById('stat-chars').textContent = chars + ' CHARS';
+  document.getElementById('stat-words').textContent = words + ' PALABRAS';
+}
+
+// ════════════════════════════════════════
+// HISTORIAL
+// ════════════════════════════════════════
+function addToHistory(prompt) {
+  if (historyIndex < promptHistory.length - 1) {
+    promptHistory = promptHistory.slice(0, historyIndex + 1);
+  }
+  promptHistory.push(prompt);
+  historyIndex = promptHistory.length - 1;
+  updateHistoryNav();
+}
+
+function updateHistoryNav() {
+  const nav = document.getElementById('history-nav');
+  if (promptHistory.length > 1) {
+    nav.classList.remove('hidden');
+    document.getElementById('history-pos').textContent = (historyIndex + 1) + '/' + promptHistory.length;
+  } else {
+    nav.classList.add('hidden');
+  }
+}
+
+function historyBack() {
+  if (historyIndex > 0) {
+    historyIndex--;
+    currentPrompt = promptHistory[historyIndex];
+    document.getElementById('output-text').textContent = currentPrompt;
+    updateStats(currentPrompt);
+    updateHistoryNav();
+  }
+}
+
+function historyFwd() {
+  if (historyIndex < promptHistory.length - 1) {
+    historyIndex++;
+    currentPrompt = promptHistory[historyIndex];
+    document.getElementById('output-text').textContent = currentPrompt;
+    updateStats(currentPrompt);
+    updateHistoryNav();
+  }
+}
+
+// ════════════════════════════════════════
+// BATALLA
+// ════════════════════════════════════════
+function selectBattle(side) {
+  battleSelected = side;
+  document.getElementById('battle-a').classList.toggle('selected', side === 'a');
+  document.getElementById('battle-b').classList.toggle('selected', side === 'b');
+}
+
+function useBattleResult() {
+  if (!battleSelected) { showToast('SELECCIONA UNA VERSIÓN'); return; }
+  currentPrompt = battleSelected === 'a' ? battleA : battleB;
+  addToHistory(currentPrompt);
+  document.getElementById('battle-area').classList.add('hidden');
+  showSingleOutput(currentPrompt);
+  battleSelected = null;
+}
+
+function closeBattle() {
+  document.getElementById('battle-area').classList.add('hidden');
+  battleSelected = null;
+}
+
+// ════════════════════════════════════════
+// COPIAR
+// ════════════════════════════════════════
+function copyPrompt() {
+  const text = document.getElementById('output-text').textContent;
+  if (!text) return;
+  navigator.clipboard.writeText(text).catch(() => {});
+  showToast('COPIADO AL PORTAPAPELES');
+}
+
+function copyViewPrompt() {
+  const text = document.getElementById('view-text').textContent;
+  if (!text) return;
+  navigator.clipboard.writeText(text).catch(() => {});
+  showToast('COPIADO AL PORTAPAPELES');
+}
+
+function copyReverse() {
+  const text = document.getElementById('reverse-text').textContent;
+  if (!text) return;
+  navigator.clipboard.writeText(text).catch(() => {});
+  showToast('COPIADO AL PORTAPAPELES');
+}
+
+// ════════════════════════════════════════
+// EXPLICAR
+// ════════════════════════════════════════
+function openExplain() {
+  if (!currentExplanation) return;
+  document.getElementById('explain-text').textContent = currentExplanation;
+  openModal('modal-explain');
+}
+
+// ════════════════════════════════════════
+// GUARDAR
+// ════════════════════════════════════════
+function openSave() {
+  const text = document.getElementById('output-text').textContent;
+  if (!text || text.includes('PROCESANDO')) return;
+  currentPrompt = text;
+  navigator.clipboard.writeText(text).catch(() => {});
+  updateFolderSelect();
+  document.getElementById('save-name').value = '';
+  const slot = document.getElementById('output-key').textContent.replace('ENCRYPT_KEY: ','');
+  document.getElementById('save-slot').textContent = slot;
+  openModal('modal-save');
+}
+
+function updateFolderSelect() {
+  const sel = document.getElementById('save-folder');
+  sel.innerHTML = folders.map(f => `<option value="${f.name}">${f.name}</option>`).join('');
+}
+
+function confirmSave() {
+  const name = document.getElementById('save-name').value.trim();
+  if (!name) { showToast('NOMBRE REQUERIDO'); return; }
+  const folderName = document.getElementById('save-folder').value;
+  const folder = folders.find(f => f.name === folderName);
+  if (folder) {
+    folder.prompts.push({
+      id: Date.now(),
+      name,
+      text: currentPrompt,
+      type: currentType,
+      date: new Date().toISOString().slice(0,10).replace(/-/g,'.')
+    });
+    saveFolders();
+  }
+  closeModal('modal-save');
+  showToast('SECUENCIA ALMACENADA');
+  renderLibrary();
+}
+
+// ════════════════════════════════════════
+// REFINAR
+// ════════════════════════════════════════
+function openRegen() {
+  if (!currentPrompt) return;
+  document.getElementById('regen-feedback').value = '';
+  openModal('modal-regen');
+}
+
+async function executeRegen() {
+  const feedback = document.getElementById('regen-feedback').value.trim();
+  if (!feedback) { showToast('FEEDBACK REQUERIDO'); return; }
+  closeModal('modal-regen');
+
+  const textEl = document.getElementById('output-text');
+  textEl.textContent = 'REFINANDO SECUENCIA...';
+  textEl.classList.add('pulse-anim');
+
+  try {
+    const refined = await callGroq([
+      { role: 'system', content: 'Eres un experto en prompt engineering. Mejora el prompt según el feedback. Devuelve SOLO el prompt mejorado, sin explicaciones.' },
+      { role: 'user', content: `Prompt actual: "${currentPrompt}"\n\nFeedback: ${feedback}\n\nDevuelve el prompt mejorado.` }
+    ]);
+    currentPrompt = refined;
+    addToHistory(refined);
+    currentExplanation += `\n\nRefinamiento: "${feedback}"`;
+    textEl.classList.remove('pulse-anim');
+    typeText(textEl, refined, () => updateStats(refined));
+    showToast('SECUENCIA REFINADA');
+  } catch(e) {
+    textEl.classList.remove('pulse-anim');
+    textEl.textContent = currentPrompt;
+    showToast('ERROR DE CONEXIÓN');
+  }
+}
+
+// ════════════════════════════════════════
+// NUEVA CARPETA
+// ════════════════════════════════════════
+function openNewFolder(fromSave = false) {
+  newFolderFromSave = fromSave;
+  if (fromSave) closeModal('modal-save');
+  document.getElementById('folder-name').value = '';
+  openModal('modal-folder');
+}
+
+function confirmNewFolder() {
+  const name = document.getElementById('folder-name').value.trim().toUpperCase();
+  if (!name) { showToast('NOMBRE REQUERIDO'); return; }
+  if (folders.find(f => f.name === name)) { showToast('LA CARPETA YA EXISTE'); return; }
+  folders.push({ name, prompts: [] });
+  saveFolders();
+  closeModal('modal-folder');
+  showToast('CARPETA CREADA');
+  renderLibrary();
+  if (newFolderFromSave) {
+    updateFolderSelect();
+    document.getElementById('save-folder').value = name;
+    openModal('modal-save');
+  }
+}
+
+// ════════════════════════════════════════
+// BIBLIOTECA
+// ════════════════════════════════════════
+function renderLibrary() {
+  const container = document.getElementById('lib-content');
+  const query = (document.getElementById('lib-search')?.value || '').toLowerCase();
+
+  const filtered = folders.map(f => ({
+    ...f,
+    prompts: f.prompts.filter(p =>
+      !query || p.name.toLowerCase().includes(query) || p.text.toLowerCase().includes(query)
+    )
+  })).filter(f => f.prompts.length > 0 || !query);
+
+  const hasContent = filtered.some(f => f.prompts.length > 0);
+  if (!hasContent) {
+    container.innerHTML = `<div class="text-center py-16 opacity-30">
+      <p class="text-xs uppercase tracking-widest">${query ? 'SIN RESULTADOS' : 'ARCHIVO VACÍO'}</p>
+      <p class="text-[9px] mt-1">${query ? 'Prueba con otra búsqueda' : 'Genera y guarda prompts para poblar el archivo'}</p>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map((folder, idx) => {
+    const col = idx % 2 === 0 ? '#00f3ff' : '#ff00ff';
+    const colClass = idx % 2 === 0 ? 'cc' : 'cm';
+    const items = folder.prompts.map(p => `
+      <div onclick="viewPrompt(${p.id})" class="bg-cgray border p-3 relative cursor-pointer transition-colors"
+        style="border-color:${col}33" onmouseover="this.style.borderColor='${col}99'" onmouseout="this.style.borderColor='${col}33'">
+        <div class="flex justify-between items-start">
+          <span class="text-[9px] font-bold" style="color:${col}">#${folder.name.slice(0,3).toUpperCase()}-${String(p.id).slice(-4)}</span>
+          <span class="text-[8px] opacity-30">STAMP: ${p.date}</span>
+        </div>
+        <p class="text-xs mt-1 text-white/80">${p.name}</p>
+        <span class="text-[8px] px-1 mt-1 inline-block" style="border:1px solid ${col}66;color:${col}">${p.type}</span>
+      </div>`).join('');
+
+    const hasPrompts = folder.prompts.length > 0;
+    return `
+      <section>
+        <div class="flex items-center gap-3 mb-3 p-2 border-l-2" style="border-color:${col};background:linear-gradient(90deg,${col}1a 0%,transparent 100%)">
+          <svg class="h-5 w-5 flex-shrink-0" style="color:${col}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/>
+          </svg>
+          <h2 class="text-sm font-bold tracking-tighter flex-1" style="color:${col}">${folder.name}</h2>
+          <span class="text-[9px] opacity-60">${String(folder.prompts.length).padStart(2,'0')}_REG</span>
+          <button onclick="event.stopPropagation();openRenameFolder('${folder.name}')" class="text-[9px] opacity-30 hover:opacity-80 ml-1" title="Renombrar">✎</button>
+        </div>
+        ${hasPrompts ? `<div class="space-y-2 pl-3">${items}</div>` : '<p class="text-[9px] opacity-20 pl-3">Sin prompts</p>'}
+      </section>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════
+// VER PROMPT
+// ════════════════════════════════════════
+function viewPrompt(id) {
+  for (const folder of folders) {
+    const p = folder.prompts.find(x => x.id === id);
+    if (p) {
+      viewingPromptId = id;
+      currentViewPrompt = p.text;
+      document.getElementById('view-title').textContent = p.name;
+      document.getElementById('view-text').textContent = p.text;
+      openModal('modal-view');
+      return;
+    }
+  }
+}
+
+function saveEditedView() {
+  const newText = document.getElementById('view-text').textContent.trim();
+  if (!newText) return;
+  for (const folder of folders) {
+    const p = folder.prompts.find(x => x.id === viewingPromptId);
+    if (p) { p.text = newText; saveFolders(); break; }
+  }
+  closeModal('modal-view');
+  showToast('EDICIÓN GUARDADA');
+  renderLibrary();
+}
+
+function deletePrompt() {
+  for (const folder of folders) {
+    const idx = folder.prompts.findIndex(x => x.id === viewingPromptId);
+    if (idx !== -1) { folder.prompts.splice(idx, 1); saveFolders(); break; }
+  }
+  closeModal('modal-view');
+  showToast('SECUENCIA ELIMINADA');
+  renderLibrary();
+}
+
+function duplicatePrompt() {
+  for (const folder of folders) {
+    const p = folder.prompts.find(x => x.id === viewingPromptId);
+    if (p) {
+      folder.prompts.push({ ...p, id: Date.now(), name: p.name + ' (copia)' });
+      saveFolders();
+      break;
+    }
+  }
+  closeModal('modal-view');
+  showToast('PROMPT DUPLICADO');
+  renderLibrary();
+}
+
+function sharePrompt() {
+  const text = document.getElementById('view-text').textContent;
+  if (navigator.share) {
+    navigator.share({ title: 'FORGE Prompt', text }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text).catch(() => {});
+    showToast('COPIADO (SHARE NO DISPONIBLE)');
+  }
+}
+
+// ════════════════════════════════════════
+// RENOMBRAR CARPETA
+// ════════════════════════════════════════
+function openRenameFolder(name) {
+  renamingFolderName = name;
+  document.getElementById('rename-input').value = name;
+  openModal('modal-rename');
+}
+
+function confirmRename() {
+  const newName = document.getElementById('rename-input').value.trim().toUpperCase();
+  if (!newName) { showToast('NOMBRE REQUERIDO'); return; }
+  if (newName !== renamingFolderName && folders.find(f => f.name === newName)) {
+    showToast('LA CARPETA YA EXISTE'); return;
+  }
+  const folder = folders.find(f => f.name === renamingFolderName);
+  if (folder) { folder.name = newName; saveFolders(); }
+  closeModal('modal-rename');
+  showToast('CARPETA RENOMBRADA');
+  renderLibrary();
+}
+
+// ════════════════════════════════════════
+// EXPORTAR
+// ════════════════════════════════════════
+function exportLibrary() {
+  const data = JSON.stringify(folders, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'forge_biblioteca_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  showToast('EXPORTACIÓN COMPLETADA');
+}
+
+// ════════════════════════════════════════
+// ANALIZAR PROMPT
+// ════════════════════════════════════════
+async function analyzePrompt() {
+  const input = document.getElementById('analyze-input').value.trim();
+  if (!input) { showToast('INTRODUCE UN PROMPT'); return; }
+
+  const btn = document.querySelector('button[onclick="analyzePrompt()"]');
+  btn.disabled = true; btn.classList.add('opacity-50');
+  document.getElementById('analyze-result').classList.add('hidden');
+
+  try {
+    const result = await callGroq([
+      { role: 'system', content: `Eres un experto en prompt engineering. Analiza el prompt dado y responde en JSON con este formato exacto (sin markdown, sin backticks):
+{"score":7,"label":"BUENO","feedback":"explicación del diagnóstico en 2-3 frases","improvements":"3 mejoras concretas separadas por punto y coma"}
+El score es del 1 al 10. Labels posibles: DEFICIENTE (1-3), BÁSICO (4-5), BUENO (6-7), MUY BUENO (8-9), EXCEPCIONAL (10). Responde SOLO el JSON.` },
+      { role: 'user', content: `Analiza este prompt: "${input}"` }
+    ], 512, 0.3);
+
+    let parsed;
+    try {
+      parsed = JSON.parse(result.replace(/```json|```/g, '').trim());
+    } catch(e) {
+      const scoreMatch = result.match(/"score"\s*:\s*(\d+)/);
+      parsed = { score: scoreMatch ? parseInt(scoreMatch[1]) : 5, label: 'ANALIZADO', feedback: result, improvements: '' };
+    }
+
+    const score = Math.min(10, Math.max(1, parsed.score));
+    document.getElementById('analyze-score').textContent = score;
+    document.getElementById('analyze-label').textContent = parsed.label || '';
+    document.getElementById('analyze-bar').style.width = (score * 10) + '%';
+    document.getElementById('analyze-feedback').textContent = parsed.feedback || '';
+    document.getElementById('analyze-improvements').textContent = parsed.improvements || '';
+
+    // Color según score
+    const scoreEl = document.getElementById('analyze-score');
+    if (score >= 8) scoreEl.style.color = '#00f3ff';
+    else if (score >= 5) scoreEl.style.color = '#ff00ff';
+    else scoreEl.style.color = '#ef4444';
+
+    document.getElementById('analyze-result').classList.remove('hidden');
+    document.getElementById('analyze-result').classList.add('fade-in');
+
+  } catch(e) {
+    showToast('ERROR DE CONEXIÓN');
+  }
+  btn.disabled = false; btn.classList.remove('opacity-50');
+}
+
+function sendToGenerator() {
+  const input = document.getElementById('analyze-input').value.trim();
+  document.getElementById('f-objetivo').value = input;
+  updateCounter();
+  showPage('gen');
+  showToast('CARGADO EN GENERADOR');
+}
+
+// ════════════════════════════════════════
+// PROMPT INVERSO
+// ════════════════════════════════════════
+async function reversePrompt() {
+  const input = document.getElementById('reverse-input').value.trim();
+  if (!input) { showToast('INTRODUCE UN OUTPUT'); return; }
+
+  const btn = document.querySelector('button[onclick="reversePrompt()"]');
+  btn.disabled = true; btn.classList.add('opacity-50');
+
+  const textEl = document.getElementById('reverse-text');
+  document.getElementById('reverse-result').classList.remove('hidden');
+  textEl.textContent = 'DEDUCIENDO SECUENCIA...';
+  textEl.classList.add('pulse-anim');
+
+  try {
+    const result = await callGroq([
+      { role: 'system', content: 'Eres un experto en prompt engineering y reverse engineering de IAs. Tu tarea es analizar un output generado por una IA y deducir el prompt que se usó para generarlo, luego optimizarlo. Devuelve SOLO el prompt optimizado, listo para usar, sin explicaciones ni introducciones.' },
+      { role: 'user', content: `Este es el output que recibí de una IA:\n\n"${input}"\n\nDeduce y optimiza el prompt que se usó para generar esto. Devuelve SOLO el prompt mejorado.` }
+    ]);
+
+    textEl.classList.remove('pulse-anim');
+    typeText(textEl, result);
+
+  } catch(e) {
+    textEl.classList.remove('pulse-anim');
+    textEl.textContent = 'ERROR DE CONEXIÓN';
+    showToast('ERROR DE CONEXIÓN');
+  }
+  btn.disabled = false; btn.classList.remove('opacity-50');
+}
+
+function sendReverseToGenerator() {
+  const text = document.getElementById('reverse-text').textContent;
+  if (!text || text.includes('ERROR')) return;
+  document.getElementById('f-objetivo').value = text;
+  updateCounter();
+  showPage('gen');
+  showToast('CARGADO EN GENERADOR');
+}
+
+// ════════════════════════════════════════
+// NAVEGACIÓN
+// ════════════════════════════════════════
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+
+  const navIds = ['gen','lib','analyze','reverse'];
+  navIds.forEach(id => {
+    const btn = document.getElementById('nav-' + id);
+    if (!btn) return;
+    const active = id === page;
+    btn.className = 'flex flex-col items-center gap-0.5 transition-all px-2 ' + (active ? 'nav-active' : 'nav-inactive');
+    const icon = btn.querySelector('.nav-icon');
+    if (icon) {
+      icon.style.borderColor = active ? '#00f3ff' : '#00666b';
+      icon.style.background = active ? 'rgba(0,243,255,0.1)' : 'transparent';
+      icon.style.boxShadow = active ? '0 0 8px rgba(0,243,255,0.4)' : 'none';
+    }
+  });
+
+  if (page === 'lib') renderLibrary();
+}
+
+// ════════════════════════════════════════
+// TOOLTIPS
+// ════════════════════════════════════════
+function toggleTip(id) {
+  document.querySelectorAll('.tooltip-box').forEach(t => {
+    if (t.id !== id) t.classList.add('hidden');
+  });
+  document.getElementById(id).classList.toggle('hidden');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.tooltip-wrap')) {
+    document.querySelectorAll('.tooltip-box').forEach(t => t.classList.add('hidden'));
+  }
+});
+
+// ════════════════════════════════════════
+// MODALES
+// ════════════════════════════════════════
+function openModal(id) {
+  document.getElementById(id).classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById(id).classList.add('hidden');
+  document.body.style.overflow = '';
+}
+function closeModalOutside(e, id) {
+  if (e.target.id === id) closeModal(id);
+}
+
+// ════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.remove('hidden');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.add('hidden'), 2000);
+}
+
+// Init
+renderLibrary();
+</script>
+</body>
+</html>
