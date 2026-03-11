@@ -291,7 +291,17 @@ input,textarea,select{color:#e5e5e5}
       <!-- FORMATO -->
       <div class="corner-tl corner-br pt-2">
         <div class="flex justify-between items-center mb-1">
-          <label class="text-[9px] uppercase tracking-widest opacity-60">Formato de salida</label>
+          <div class="flex items-center gap-2">
+            <label class="text-[9px] uppercase tracking-widest opacity-60">Formato de salida</label>
+            <button onclick="toggleEnglish()" id="english-toggle"
+              class="flex items-center gap-1 border border-cdc/50 px-1.5 py-0.5 hover:border-cc transition-colors group"
+              title="Generar prompt en inglés">
+              <div id="english-box" class="w-2.5 h-2.5 border border-cdc/80 group-hover:border-cc transition-colors flex items-center justify-center">
+                <div id="english-fill" class="w-1.5 h-1.5 bg-cc hidden"></div>
+              </div>
+              <span class="text-[8px] uppercase tracking-widest opacity-50 group-hover:opacity-100 transition-opacity" id="english-label">EN</span>
+            </button>
+          </div>
           <div class="tooltip-wrap">
             <span class="text-cm cursor-help text-xs opacity-60 hover:opacity-100 transition-colors" onclick="toggleTip('tip-fmt')">[?]</span>
             <div id="tip-fmt" class="tooltip-box hidden">Longitud, estructura, tono. Ej: "respuesta breve en bullet points", "tono formal", "ratio 16:9 horizontal", "función Python con comentarios".</div>
@@ -770,6 +780,7 @@ let battleSelected = null;
 let battleA = '';
 let battleB = '';
 let promptCounter = 0;
+let forceEnglish = false;
 let toastTimer = null;
 
 // Historial de generaciones (sesión)
@@ -840,6 +851,14 @@ function selectType(type) {
 // ════════════════════════════════════════
 // CONTADOR DE CAMPOS
 // ════════════════════════════════════════
+function toggleEnglish() {
+  forceEnglish = !forceEnglish;
+  document.getElementById("english-fill").classList.toggle("hidden", !forceEnglish);
+  document.getElementById("english-box").style.borderColor = forceEnglish ? "#00f3ff" : "";
+  document.getElementById("english-label").style.color = forceEnglish ? "#00f3ff" : "";
+  document.getElementById("english-label").style.opacity = forceEnglish ? "1" : "";
+}
+
 function updateCounter() {
   const fields = ['f-objetivo','f-contexto','f-audiencia','f-formato','f-restricciones'];
   const filled = fields.filter(id => document.getElementById(id).value.trim()).length;
