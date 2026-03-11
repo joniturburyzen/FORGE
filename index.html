@@ -595,27 +595,32 @@ input,textarea,select{color:#e5e5e5}
 
 <!-- EXPLAIN -->
 <div id="modal-explain" class="overlay hidden" onclick="closeModalOutside(event,'modal-explain')">
-  <div class="modal grid-bg p-6">
+  <div class="modal grid-bg" style="display:flex;flex-direction:column;max-height:90vh;overflow:hidden">
     <div class="sweep"></div>
-    <div class="flex justify-between items-start mb-4">
-      <div>
-        <h2 class="font-orb text-lg font-black italic text-cc title-glow uppercase">LÓGICA NEURAL</h2>
-        <div class="h-0.5 w-16 bg-cc mt-1 shadow-nc"></div>
+    <!-- CABECERA FIJA -->
+    <div style="padding:1.5rem 1.5rem 0.75rem;flex-shrink:0">
+      <div class="flex justify-between items-start mb-3">
+        <div>
+          <h2 class="font-orb text-lg font-black italic text-cc title-glow uppercase">LÓGICA NEURAL</h2>
+          <div class="h-0.5 w-16 bg-cc mt-1 shadow-nc"></div>
+        </div>
+        <button onclick="closeModal('modal-explain')" class="text-cc text-lg leading-none hover:opacity-100" style="opacity:0.5;margin-left:1rem;flex-shrink:0">✕</button>
       </div>
-      <button onclick="closeModal('modal-explain')" class="text-cc opacity-40 hover:opacity-100 text-sm">✕</button>
+      <p class="text-xs mb-2" style="color:rgba(0,243,255,0.6)">Secuencia de razonamiento iniciada. Analizando decisiones de diseño del prompt.</p>
+      <p class="text-[9px] text-cm uppercase font-bold">Flujo Lógico:</p>
     </div>
-    <p class="text-xs text-cc/70 mb-3">Secuencia de razonamiento iniciada. Analizando decisiones de diseño del prompt.</p>
-    <div class="border-l-2 border-cm/50 pl-3 py-2 bg-cm/5 mb-4">
-      <p class="text-[9px] text-cm uppercase font-bold mb-1">Flujo Lógico:</p>
-      <p id="explain-text" class="text-xs text-white/80 italic leading-relaxed whitespace-pre-line"></p>
+    <!-- CONTENIDO SCROLLABLE -->
+    <div style="overflow-y:auto;flex:1;padding:0.5rem 1.5rem;-webkit-overflow-scrolling:touch">
+      <div class="border-l-2 border-cm/50 pl-3 py-2 bg-cm/5">
+        <p id="explain-text" class="text-xs text-white/80 italic leading-relaxed whitespace-pre-line"></p>
+      </div>
     </div>
-    <p class="text-[9px] text-cc/60">Estado del sistema: <span class="text-cc pulse-anim">OPTIMIZADO</span></p>
-    <div class="border-t border-cc/20 mt-5 pt-4 flex justify-center">
-      <button onclick="closeModal('modal-explain')" class="clip-l bg-cm text-black font-orb font-bold py-2 px-8 text-xs tracking-widest shadow-nm hover:brightness-125">ENTENDIDO</button>
-    </div>
-    <div class="flex justify-between items-end mt-4">
-      <div class="flex gap-1"><div class="w-0.5 h-5 bg-cc/30"></div><div class="w-0.5 h-3 bg-cc/30"></div><div class="w-0.5 h-5 bg-cc/30"></div></div>
-      <span class="text-[8px] text-cc/20">SYS_LOG_ID: {{4492-X}}</span>
+    <!-- PIE FIJO -->
+    <div style="padding:0.75rem 1.5rem 1.25rem;flex-shrink:0;border-top:1px solid rgba(0,243,255,0.15)">
+      <p class="text-[9px] mb-3" style="color:rgba(0,243,255,0.5)">Estado: <span class="text-cc pulse-anim">OPTIMIZADO</span></p>
+      <div class="flex justify-center">
+        <button onclick="closeModal('modal-explain')" class="clip-l bg-cm text-black font-orb font-bold py-2 px-8 text-xs tracking-widest shadow-nm hover:brightness-125">ENTENDIDO</button>
+      </div>
     </div>
   </div>
 </div>
