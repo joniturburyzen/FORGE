@@ -297,7 +297,7 @@ input,textarea,select{color:#e5e5e5}
               class="flex items-center gap-1 border border-cdc/50 px-1.5 py-0.5 hover:border-cc transition-colors group"
               title="Generar prompt en inglés">
               <div id="english-box" class="w-2.5 h-2.5 border border-cdc/80 group-hover:border-cc transition-colors flex items-center justify-center">
-                <div id="english-fill" class="w-1.5 h-1.5 bg-cc hidden"></div>
+                <div id="english-fill" style="display:none;width:8px;height:8px;background:#00f3ff;"></div>
               </div>
               <span class="text-[8px] uppercase tracking-widest opacity-50 group-hover:opacity-100 transition-opacity" id="english-label">EN</span>
             </button>
@@ -853,10 +853,21 @@ function selectType(type) {
 // ════════════════════════════════════════
 function toggleEnglish() {
   forceEnglish = !forceEnglish;
-  document.getElementById("english-fill").classList.toggle("hidden", !forceEnglish);
-  document.getElementById("english-box").style.borderColor = forceEnglish ? "#00f3ff" : "";
-  document.getElementById("english-label").style.color = forceEnglish ? "#00f3ff" : "";
-  document.getElementById("english-label").style.opacity = forceEnglish ? "1" : "";
+  const fill = document.getElementById("english-fill");
+  const box = document.getElementById("english-box");
+  const label = document.getElementById("english-label");
+  // Relleno del cuadrado
+  fill.style.display = forceEnglish ? 'block' : 'none';
+  fill.style.width = '8px';
+  fill.style.height = '8px';
+  fill.style.background = '#00f3ff';
+  fill.style.boxShadow = forceEnglish ? '0 0 4px #00f3ff' : 'none';
+  // Borde del cuadrado
+  box.style.borderColor = forceEnglish ? '#00f3ff' : '#00666b';
+  box.style.boxShadow = forceEnglish ? '0 0 6px rgba(0,243,255,0.4)' : 'none';
+  // Label
+  label.style.color = forceEnglish ? '#00f3ff' : '';
+  label.style.opacity = forceEnglish ? '1' : '0.5';
 }
 
 function updateCounter() {
@@ -904,6 +915,10 @@ async function generatePrompt(mode = 'single') {
   if (formato) userBase += `\nFormato: ${formato}`;
   if (restricciones) userBase += `\nRestricciones: ${restricciones}`;
 
+  const idiomaRule = forceEnglish
+    ? '- OBLIGATORIO: El prompt resultante debe estar escrito ÍNTEGRAMENTE EN INGLÉS, independientemente del idioma en que estén escritos los campos del usuario.'
+    : '- El prompt debe estar en el idioma más apropiado para la tarea (inglés para imagen/código, español para texto si el objetivo está en español).';
+
   const systemBase = `Eres un experto en prompt engineering. Tu tarea es generar prompts optimizados para IAs.
 Reglas absolutas:
 - Devuelve ÚNICAMENTE el prompt, sin introducción, sin explicación, sin comillas envolventes
@@ -911,7 +926,7 @@ Reglas absolutas:
 - Para CÓDIGO: incluye lenguaje, estructura, manejo de errores, casos edge
 - Para TEXTO: incluye tono, estructura, longitud aproximada, perspectiva
 - Para VÍDEO: incluye estilo, ritmo, elementos visuales, duración
-- El prompt debe estar en el idioma más apropiado (inglés para imagen/código, español para texto si el objetivo está en español)`;
+${idiomaRule}`;
 
   // UI: loading
   setLoading(true, mode);
