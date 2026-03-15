@@ -241,29 +241,29 @@ input,textarea,select{color:#e5e5e5}
       <div id="ac-panel" class="hidden border border-cdc/30 border-t-0 bg-black/30 p-3">
         <p class="text-[8px] opacity-40 mb-3 uppercase tracking-widest">Selecciona los filtros a esquivar — el prompt se reformulará evitando esos bloqueos</p>
         <div class="grid grid-cols-2 gap-2">
-          <div onclick="toggleAcFilter(this,'adulto')" class="ac-item flex items-center gap-2 cursor-pointer py-1">
-            <div class="ac-box" style="width:14px;height:14px;border:1px solid #00666b;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color 0.2s">
-              <div class="ac-fill" style="display:none;width:8px;height:8px;background:#ff00ff;box-shadow:0 0 4px #ff00ff"></div>
+          <div onclick="toggleAcFilter('adulto')" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0">
+            <div id="ac-box-adulto" style="width:14px;height:14px;min-width:14px;border:1px solid #00666b;display:flex;align-items:center;justify-content:center">
+              <div id="ac-fill-adulto" style="display:none;width:8px;height:8px;background:#ff00ff;box-shadow:0 0 4px #ff00ff"></div>
             </div>
-            <span class="ac-label" style="font-size:10px;color:rgba(255,255,255,0.5);transition:color 0.2s">Contenido adulto</span>
+            <span id="ac-label-adulto" style="font-size:10px;color:rgba(255,255,255,0.5)">Contenido adulto</span>
           </div>
-          <div onclick="toggleAcFilter(this,'violencia')" class="ac-item flex items-center gap-2 cursor-pointer py-1">
-            <div class="ac-box" style="width:14px;height:14px;border:1px solid #00666b;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color 0.2s">
-              <div class="ac-fill" style="display:none;width:8px;height:8px;background:#ff00ff;box-shadow:0 0 4px #ff00ff"></div>
+          <div onclick="toggleAcFilter('violencia')" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0">
+            <div id="ac-box-violencia" style="width:14px;height:14px;min-width:14px;border:1px solid #00666b;display:flex;align-items:center;justify-content:center">
+              <div id="ac-fill-violencia" style="display:none;width:8px;height:8px;background:#ff00ff;box-shadow:0 0 4px #ff00ff"></div>
             </div>
-            <span class="ac-label" style="font-size:10px;color:rgba(255,255,255,0.5);transition:color 0.2s">Violencia</span>
+            <span id="ac-label-violencia" style="font-size:10px;color:rgba(255,255,255,0.5)">Violencia</span>
           </div>
-          <div onclick="toggleAcFilter(this,'politica')" class="ac-item flex items-center gap-2 cursor-pointer py-1">
-            <div class="ac-box" style="width:14px;height:14px;border:1px solid #00666b;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color 0.2s">
-              <div class="ac-fill" style="display:none;width:8px;height:8px;background:#ff00ff;box-shadow:0 0 4px #ff00ff"></div>
+          <div onclick="toggleAcFilter('politica')" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0">
+            <div id="ac-box-politica" style="width:14px;height:14px;min-width:14px;border:1px solid #00666b;display:flex;align-items:center;justify-content:center">
+              <div id="ac-fill-politica" style="display:none;width:8px;height:8px;background:#ff00ff;box-shadow:0 0 4px #ff00ff"></div>
             </div>
-            <span class="ac-label" style="font-size:10px;color:rgba(255,255,255,0.5);transition:color 0.2s">Política</span>
+            <span id="ac-label-politica" style="font-size:10px;color:rgba(255,255,255,0.5)">Política</span>
           </div>
-          <div onclick="toggleAcFilter(this,'medico')" class="ac-item flex items-center gap-2 cursor-pointer py-1">
-            <div class="ac-box" style="width:14px;height:14px;border:1px solid #00666b;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color 0.2s">
-              <div class="ac-fill" style="display:none;width:8px;height:8px;background:#ff00ff;box-shadow:0 0 4px #ff00ff"></div>
+          <div onclick="toggleAcFilter('medico')" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0">
+            <div id="ac-box-medico" style="width:14px;height:14px;min-width:14px;border:1px solid #00666b;display:flex;align-items:center;justify-content:center">
+              <div id="ac-fill-medico" style="display:none;width:8px;height:8px;background:#ff00ff;box-shadow:0 0 4px #ff00ff"></div>
             </div>
-            <span class="ac-label" style="font-size:10px;color:rgba(255,255,255,0.5);transition:color 0.2s">Temas médicos</span>
+            <span id="ac-label-medico" style="font-size:10px;color:rgba(255,255,255,0.5)">Temas médicos</span>
           </div>
         </div>
       </div>
@@ -940,22 +940,22 @@ function toggleAnticensura() {
   arrow.style.transform = acActive ? 'rotate(180deg)' : '';
 }
 
-function toggleAcFilter(el, value) {
-  const fill = el.querySelector('.ac-fill');
-  const box = el.querySelector('.ac-box');
-  const label = el.querySelector('.ac-label');
+function toggleAcFilter(value) {
+  const fill  = document.getElementById('ac-fill-'  + value);
+  const box   = document.getElementById('ac-box-'   + value);
+  const label = document.getElementById('ac-label-' + value);
   if (acFilters.has(value)) {
     acFilters.delete(value);
-    fill.style.display = 'none';
-    box.style.borderColor = '';
-    box.style.boxShadow = '';
-    label.style.color = '';
+    fill.style.display  = 'none';
+    box.style.borderColor = '#00666b';
+    box.style.boxShadow = 'none';
+    label.style.color   = 'rgba(255,255,255,0.5)';
   } else {
     acFilters.add(value);
-    fill.style.display = 'block';
+    fill.style.display  = 'block';
     box.style.borderColor = '#ff00ff';
     box.style.boxShadow = '0 0 6px rgba(255,0,255,0.4)';
-    label.style.color = '#ff00ff';
+    label.style.color   = '#ff00ff';
   }
 }
 
