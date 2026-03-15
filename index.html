@@ -228,6 +228,51 @@ input,textarea,select{color:#e5e5e5}
   <!-- COLUMNA IZQUIERDA -->
   <div class="gen-left">
 
+    <!-- ANTI-CENSURA -->
+    <section class="mb-5">
+      <button onclick="toggleAnticensura()" id="ac-toggle"
+        class="w-full flex items-center justify-between border border-cdc/50 px-3 py-2 hover:border-cm hover:bg-cm/5 transition-all group">
+        <div class="flex items-center gap-2">
+          <div id="ac-indicator" class="w-2 h-2 border border-cdc/60 group-hover:border-cm transition-colors"></div>
+          <span class="text-[10px] font-orb uppercase tracking-widest text-white/50 group-hover:text-white/80 transition-colors">Anti-censura</span>
+        </div>
+        <span id="ac-arrow" class="text-[9px] text-white/30 transition-transform">▼</span>
+      </button>
+      <div id="ac-panel" class="hidden border border-cdc/30 border-t-0 bg-black/30 p-3">
+        <p class="text-[8px] opacity-40 mb-3 uppercase tracking-widest">Selecciona los filtros a esquivar — el prompt se reformulará evitando esos bloqueos</p>
+        <div class="grid grid-cols-2 gap-2">
+          <label class="ac-check flex items-center gap-2 cursor-pointer group/c">
+            <div class="ac-box w-3 h-3 border border-cdc/60 flex items-center justify-center transition-all group-hover/c:border-cm">
+              <div class="ac-fill w-2 h-2 bg-cm hidden" style="box-shadow:0 0 4px #ff00ff"></div>
+            </div>
+            <span class="text-[10px] text-white/60 group-hover/c:text-white/90 transition-colors">Contenido adulto</span>
+            <input type="checkbox" value="adulto" onchange="updateAcState(this)" class="hidden"/>
+          </label>
+          <label class="ac-check flex items-center gap-2 cursor-pointer group/c">
+            <div class="ac-box w-3 h-3 border border-cdc/60 flex items-center justify-center transition-all group-hover/c:border-cm">
+              <div class="ac-fill w-2 h-2 bg-cm hidden" style="box-shadow:0 0 4px #ff00ff"></div>
+            </div>
+            <span class="text-[10px] text-white/60 group-hover/c:text-white/90 transition-colors">Violencia</span>
+            <input type="checkbox" value="violencia" onchange="updateAcState(this)" class="hidden"/>
+          </label>
+          <label class="ac-check flex items-center gap-2 cursor-pointer group/c">
+            <div class="ac-box w-3 h-3 border border-cdc/60 flex items-center justify-center transition-all group-hover/c:border-cm">
+              <div class="ac-fill w-2 h-2 bg-cm hidden" style="box-shadow:0 0 4px #ff00ff"></div>
+            </div>
+            <span class="text-[10px] text-white/60 group-hover/c:text-white/90 transition-colors">Política</span>
+            <input type="checkbox" value="politica" onchange="updateAcState(this)" class="hidden"/>
+          </label>
+          <label class="ac-check flex items-center gap-2 cursor-pointer group/c">
+            <div class="ac-box w-3 h-3 border border-cdc/60 flex items-center justify-center transition-all group-hover/c:border-cm">
+              <div class="ac-fill w-2 h-2 bg-cm hidden" style="box-shadow:0 0 4px #ff00ff"></div>
+            </div>
+            <span class="text-[10px] text-white/60 group-hover/c:text-white/90 transition-colors">Temas médicos</span>
+            <input type="checkbox" value="medico" onchange="updateAcState(this)" class="hidden"/>
+          </label>
+        </div>
+      </div>
+    </section>
+
     <!-- TIPO DE OUTPUT -->
     <section class="mb-5">
       <div class="flex justify-between items-center mb-2">
@@ -260,57 +305,8 @@ input,textarea,select{color:#e5e5e5}
           class="w-full bg-black/50 border border-cdc p-3 text-xs text-white/90 resize-none transition-all"></textarea>
       </div>
 
-      <!-- CONTEXTO -->
-      <div class="corner-tl corner-br pt-2">
-        <div class="flex justify-between items-center mb-1">
-          <label class="text-[9px] uppercase tracking-widest opacity-60">Contexto</label>
-          <div class="tooltip-wrap">
-            <span class="text-cm cursor-help text-xs opacity-60 hover:opacity-100 transition-colors" onclick="toggleTip('tip-ctx')">[?]</span>
-            <div id="tip-ctx" class="tooltip-box hidden">¿Para qué se usará el resultado? Ej: "presentación de empresa", "portfolio personal", "post de Instagram". Cuanto más contexto, mejor resultado.</div>
-          </div>
-        </div>
-        <input id="f-contexto" type="text" placeholder="PARÁMETROS DE CONTEXTO..."
-          oninput="updateCounter()"
-          class="w-full bg-black/50 border border-cdc p-3 text-xs transition-all"/>
-      </div>
-
-      <!-- AUDIENCIA -->
-      <div class="corner-tl corner-br pt-2">
-        <div class="flex justify-between items-center mb-1">
-          <label class="text-[9px] uppercase tracking-widest opacity-60">Audiencia</label>
-          <div class="tooltip-wrap">
-            <span class="text-cm cursor-help text-xs opacity-60 hover:opacity-100 transition-colors" onclick="toggleTip('tip-aud')">[?]</span>
-            <div id="tip-aud" class="tooltip-box hidden">¿A quién va dirigido? Ej: "desarrolladores senior", "niños de 8 años", "clientes de lujo". Afecta al tono y vocabulario del resultado.</div>
-          </div>
-        </div>
-        <input id="f-audiencia" type="text" placeholder="IDENTIFICADOR DE AUDIENCIA..."
-          oninput="updateCounter()"
-          class="w-full bg-black/50 border border-cdc p-3 text-xs transition-all"/>
-      </div>
-
-      <!-- FORMATO -->
-      <div class="corner-tl corner-br pt-2">
-        <div class="flex justify-between items-center mb-1">
-          <div class="flex items-center gap-2">
-            <label class="text-[9px] uppercase tracking-widest opacity-60">Formato de salida</label>
-            <button onclick="toggleEnglish()" id="english-toggle"
-              class="flex items-center gap-1 border border-cdc/50 px-1.5 py-0.5 hover:border-cc transition-colors group"
-              title="Generar prompt en inglés">
-              <div id="english-box" class="w-2.5 h-2.5 border border-cdc/80 group-hover:border-cc transition-colors flex items-center justify-center">
-                <div id="english-fill" style="display:none;width:8px;height:8px;background:#00f3ff;"></div>
-              </div>
-              <span class="text-[8px] uppercase tracking-widest opacity-50 group-hover:opacity-100 transition-opacity" id="english-label">EN</span>
-            </button>
-          </div>
-          <div class="tooltip-wrap">
-            <span class="text-cm cursor-help text-xs opacity-60 hover:opacity-100 transition-colors" onclick="toggleTip('tip-fmt')">[?]</span>
-            <div id="tip-fmt" class="tooltip-box hidden">Longitud, estructura, tono. Ej: "respuesta breve en bullet points", "tono formal", "ratio 16:9 horizontal", "función Python con comentarios".</div>
-          </div>
-        </div>
-        <input id="f-formato" type="text" placeholder="ESPECIFICACIONES DE FORMATO..."
-          oninput="updateCounter()"
-          class="w-full bg-black/50 border border-cdc p-3 text-xs transition-all"/>
-      </div>
+      <!-- CAMPOS DINÁMICOS POR TIPO -->
+      <div id="dynamic-fields" class="space-y-4"></div>
 
       <!-- RESTRICCIONES -->
       <div class="corner-tl corner-br pt-2">
@@ -328,19 +324,20 @@ input,textarea,select{color:#e5e5e5}
     </section>
 
     <!-- BOTONES DE ACCIÓN -->
-    <div class="flex gap-2 mb-5">
-      <button onclick="generatePrompt('single')" class="flex-1 bg-cm text-black font-orb font-black py-3 clip-main shadow-nm hover:brightness-125 active:scale-[0.98] transition-all text-xs tracking-widest italic uppercase">
-        Generar Prompt
+    <div class="flex gap-2 mb-5 items-stretch">
+      <button onclick="generatePrompt('single')" id="btn-generar" class="flex-1 bg-cm text-black font-orb font-black py-3 clip-r shadow-nm hover:brightness-125 active:scale-[0.98] transition-all text-xs tracking-widest italic uppercase">
+        GENERAR
+      </button>
+      <button onclick="toggleEnglish()" id="english-toggle"
+        class="px-4 py-3 border border-cdc text-cc/50 font-orb font-bold text-[10px] tracking-widest hover:border-cc hover:text-cc transition-all"
+        title="Generar prompt en inglés">EN</button>
+      <button onclick="generatePrompt('detail')" id="btn-detallar" class="flex-1 border border-cc text-cc font-orb font-bold py-3 clip-l hover:bg-cc/10 active:scale-[0.98] transition-all text-xs tracking-widest italic uppercase">
+        DETALLAR
       </button>
       <button onclick="resetFields()" class="cb-border px-3 py-3 text-cc hover:bg-cc/10 transition-colors" title="Limpiar campos">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></svg>
       </button>
     </div>
-
-    <!-- MODO BATALLA -->
-    <button onclick="generatePrompt('battle')" class="w-full mb-5 border border-cc/40 text-cc py-2.5 text-[10px] tracking-widest uppercase hover:bg-cc/5 hover:border-cc transition-all font-orb">
-      ⚔ MODO BATALLA — Esencial vs Detallado
-    </button>
 
   </div><!-- /gen-left -->
 
@@ -439,16 +436,32 @@ input,textarea,select{color:#e5e5e5}
       <button onclick="exportLibrary()" class="text-[9px] border border-cdc px-2 py-1 hover:border-cc transition-colors" title="Exportar">
         <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
       </button>
+      <button onclick="document.getElementById('import-input').click()" class="text-[9px] border border-cdc px-2 py-1 hover:border-cc transition-colors" title="Importar">
+        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M19 15v4H5v-4H3v4c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-4h-2zm-8 1l-4-4h3V3h2v9h3l-4 4z"/></svg>
+      </button>
+      <input id="import-input" type="file" accept=".json" onchange="importLibrary(event)" class="hidden"/>
       <div class="text-[9px] text-right opacity-30">COORD_X: 42.083</div>
     </div>
   </header>
 
-  <!-- BUSCADOR -->
-  <div class="px-4 pt-3 pb-1">
+  <!-- BUSCADOR + FILTROS -->
+  <div class="px-4 pt-3 pb-1 space-y-2">
     <div class="relative">
       <input id="lib-search" type="text" placeholder="BUSCAR SECUENCIAS..." oninput="renderLibrary()"
         class="w-full bg-black/50 border border-cdc p-2 pl-8 text-xs transition-all"/>
       <svg class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>
+    </div>
+    <div class="flex gap-1.5">
+      <button onclick="setTypeFilter(null)" data-filter="ALL"
+        class="type-filter flex-1 text-[8px] font-orb uppercase tracking-widest py-1 border border-cc bg-cc/10 text-cc transition-all">TODOS</button>
+      <button onclick="setTypeFilter('TEXTO')" data-filter="TEXTO"
+        class="type-filter flex-1 text-[8px] font-orb uppercase tracking-widest py-1 border border-cdc/50 text-white/40 hover:border-cc hover:text-cc transition-all">TEXTO</button>
+      <button onclick="setTypeFilter('IMAGEN')" data-filter="IMAGEN"
+        class="type-filter flex-1 text-[8px] font-orb uppercase tracking-widest py-1 border border-cdc/50 text-white/40 hover:border-cc hover:text-cc transition-all">IMAGEN</button>
+      <button onclick="setTypeFilter('CÓDIGO')" data-filter="CÓDIGO"
+        class="type-filter flex-1 text-[8px] font-orb uppercase tracking-widest py-1 border border-cdc/50 text-white/40 hover:border-cc hover:text-cc transition-all">CÓDIGO</button>
+      <button onclick="setTypeFilter('VÍDEO')" data-filter="VÍDEO"
+        class="type-filter flex-1 text-[8px] font-orb uppercase tracking-widest py-1 border border-cdc/50 text-white/40 hover:border-cc hover:text-cc transition-all">VÍDEO</button>
     </div>
   </div>
 
@@ -510,8 +523,20 @@ input,textarea,select{color:#e5e5e5}
         <p id="analyze-improvements" class="text-xs text-white/80 leading-relaxed"></p>
       </div>
       <div class="mt-4 flex gap-2">
-        <button onclick="sendToGenerator()" class="flex-1 bg-cm text-black font-orb font-bold py-2 text-xs tracking-widest clip-r shadow-nm hover:brightness-125">MEJORAR EN GENERADOR</button>
+        <button onclick="autoImprovePrompt()" id="btn-autoimprove" class="flex-1 bg-cc text-black font-orb font-bold py-2 text-xs tracking-widest clip-l shadow-nc hover:brightness-125">MEJORAR AUTO</button>
+        <button onclick="sendToGenerator()" class="flex-1 bg-cm text-black font-orb font-bold py-2 text-xs tracking-widest clip-r shadow-nm hover:brightness-125">EN GENERADOR</button>
       </div>
+      <!-- RESULTADO MEJORA AUTO -->
+      <section id="autoimprove-result" class="hidden mt-4">
+        <div class="border-l-2 border-cc pl-3 py-1 bg-cc/5 mb-3">
+          <p class="text-[9px] text-cc uppercase font-bold mb-1">Prompt mejorado:</p>
+          <p id="autoimprove-text" class="text-xs text-white/85 italic leading-relaxed"></p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="copyAutoImproved()" class="flex-1 border border-cc text-cc font-orb py-2 text-xs tracking-widest clip-l hover:bg-cc/10">COPIAR</button>
+          <button onclick="sendAutoImprovedToGenerator()" class="flex-1 bg-cm text-black font-orb font-bold py-2 text-xs tracking-widest clip-r shadow-nm hover:brightness-125">USAR EN GENERADOR</button>
+        </div>
+      </section>
     </div>
   </section>
 </div>
@@ -559,6 +584,98 @@ input,textarea,select{color:#e5e5e5}
   </section>
 </div>
 
+<!-- ════════════ PÁGINA: SECUENCIA ════════════ -->
+<div id="page-seq" class="page pb-24 px-4 pt-4">
+  <header class="mb-5 pt-1">
+    <div class="flex justify-between items-start border-b border-cdc pb-2">
+      <h1 class="font-orb text-xl font-black italic uppercase leading-tight title-glow">
+        SECUENCIA<br><span class="text-white text-xs font-normal tracking-widest">VÍDEO ENCADENADO</span>
+      </h1>
+      <div class="text-right text-[9px] opacity-40">COORD_X: 33.471<br>COORD_Y: 55.009</div>
+    </div>
+    <div class="w-16 h-0.5 bg-cm mt-1 shadow-nm"></div>
+  </header>
+
+  <!-- UNIVERSO -->
+  <div class="corner-tl corner-br pt-2 mb-4">
+    <label class="text-[9px] uppercase tracking-widest block mb-1">Universo base <span class="text-cm">*</span></label>
+    <textarea id="seq-universo" rows="3" placeholder="Describe personajes, escenario, estilo visual, iluminación, paleta de color..."
+      class="w-full bg-black/50 border border-cdc p-3 text-xs text-white/90 resize-none transition-all"></textarea>
+  </div>
+
+  <!-- HERRAMIENTA -->
+  <div class="corner-tl corner-br pt-2 mb-4">
+    <label class="text-[9px] uppercase tracking-widest opacity-60 block mb-1">Herramienta destino</label>
+    <div class="relative">
+      <select id="seq-herramienta" class="w-full bg-cgray border border-cdc p-3 text-xs appearance-none focus:border-cc outline-none transition-all">
+        <option value="Runway Gen-3">Runway Gen-3</option>
+        <option value="Kling AI">Kling AI</option>
+        <option value="Sora">Sora</option>
+        <option value="Pika">Pika</option>
+        <option value="Luma Dream Machine">Luma Dream Machine</option>
+        <option value="genérica">Genérica (cualquier modelo)</option>
+      </select>
+      <span class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-cc/40 text-xs">▼</span>
+    </div>
+  </div>
+
+  <!-- ENFOQUE -->
+  <div class="mb-4">
+    <p class="text-[9px] uppercase tracking-widest opacity-60 mb-2">Enfoque</p>
+    <div class="grid grid-cols-2 gap-2">
+      <button onclick="selectEnfoque('B')" id="enfoque-B"
+        class="enfoque-btn border py-3 px-2 text-[10px] font-orb uppercase tracking-widest transition-all border-cc bg-cc/10 text-cc">
+        B — Universo + Delta
+      </button>
+      <button onclick="selectEnfoque('A')" id="enfoque-A"
+        class="enfoque-btn border py-3 px-2 text-[10px] font-orb uppercase tracking-widest transition-all border-cdc/50 text-white/40 hover:border-cc hover:text-cc">
+        A — Prompt completo
+      </button>
+    </div>
+    <p id="enfoque-desc" class="text-[9px] opacity-40 mt-1 leading-relaxed">Cada escena hereda el universo base y solo describe la acción/cambio. Más consistente.</p>
+  </div>
+
+  <!-- Nº ESCENAS + DURACIÓN -->
+  <div class="grid grid-cols-2 gap-3 mb-4">
+    <div class="corner-tl pt-2">
+      <label class="text-[9px] uppercase tracking-widest opacity-60 block mb-1">Nº de escenas</label>
+      <input id="seq-nescenas" type="number" min="2" max="20" value="3"
+        class="w-full bg-black/50 border border-cdc p-3 text-xs transition-all"/>
+    </div>
+    <div class="corner-br pt-2">
+      <label class="text-[9px] uppercase tracking-widest opacity-60 block mb-1">Duración por clip</label>
+      <div class="relative">
+        <select id="seq-duracion" class="w-full bg-cgray border border-cdc p-3 text-xs appearance-none focus:border-cc outline-none transition-all">
+          <option value="3s">3s</option>
+          <option value="5s" selected>5s</option>
+          <option value="8s">8s</option>
+          <option value="10s">10s</option>
+        </select>
+        <span class="absolute inset-y-0 right-2 flex items-center pointer-events-none text-cc/40 text-xs">▼</span>
+      </div>
+    </div>
+  </div>
+
+  <button onclick="buildScenes()" class="w-full mb-4 border border-cc/40 text-cc py-2.5 text-[10px] tracking-widest uppercase hover:bg-cc/5 hover:border-cc transition-all font-orb">
+    CONSTRUIR ESCENAS
+  </button>
+
+  <div id="seq-scenes" class="space-y-3 mb-5"></div>
+
+  <button onclick="generateSequence()" id="btn-seq-gen"
+    class="w-full bg-cm text-black font-orb font-black py-3 clip-main shadow-nm hover:brightness-125 active:scale-[0.98] transition-all text-xs tracking-widest italic uppercase mb-5 hidden">
+    GENERAR SECUENCIA
+  </button>
+
+  <section id="seq-output" class="hidden space-y-3 mb-4">
+    <div class="flex justify-between items-center mb-1">
+      <div class="text-[9px] uppercase border-l-2 border-cm pl-2">Secuencia generada</div>
+      <button onclick="copyAllSequence()" class="text-[9px] border border-cdc px-2 py-1 hover:border-cc text-cc/60 hover:text-cc transition-colors">COPIAR TODO</button>
+    </div>
+    <div id="seq-prompts" class="space-y-2"></div>
+  </section>
+</div>
+
 <!-- ════════════════════════════════════════
      NAVEGACIÓN INFERIOR
 ════════════════════════════════════════ -->
@@ -581,11 +698,17 @@ input,textarea,select{color:#e5e5e5}
     </div>
     <span class="text-[7px] uppercase tracking-widest">Analizar</span>
   </button>
-  <button onclick="showPage('reverse')" id="nav-reverse" class="flex flex-col items-center gap-0.5 nav-inactive transition-all px-2">
+  <button onclick="showPage('reverse')" id="nav-reverse" class="flex flex-col items-center gap-0.5 nav-inactive transition-all px-1">
     <div class="nav-icon w-7 h-7 border border-cdc flex items-center justify-center transition-all">
       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></svg>
     </div>
     <span class="text-[7px] uppercase tracking-widest">Invertir</span>
+  </button>
+  <button onclick="showPage('seq')" id="nav-seq" class="flex flex-col items-center gap-0.5 nav-inactive transition-all px-1">
+    <div class="nav-icon w-7 h-7 border border-cdc flex items-center justify-center transition-all">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></svg>
+    </div>
+    <span class="text-[7px] uppercase tracking-widest">Secuencia</span>
   </button>
 </nav>
 
@@ -733,6 +856,15 @@ input,textarea,select{color:#e5e5e5}
       <button onclick="sharePrompt()" class="flex-1 border border-cdc text-cc/60 font-orb py-2 text-xs tracking-widest hover:border-cc hover:text-cc clip-l">COMPARTIR</button>
       <button onclick="duplicatePrompt()" class="flex-1 border border-cdc text-cc/60 font-orb py-2 text-xs tracking-widest hover:border-cc hover:text-cc clip-r">DUPLICAR</button>
     </div>
+    <!-- MOVER A CARPETA -->
+    <div class="mt-2 flex gap-2 items-center">
+      <div class="relative flex-1">
+        <select id="move-folder-select" class="w-full bg-cgray border border-cdc/50 p-2 text-[10px] font-mono appearance-none focus:border-cc outline-none transition-all text-white/60">
+        </select>
+        <span class="absolute inset-y-0 right-2 flex items-center pointer-events-none text-cc/40 text-xs">▼</span>
+      </div>
+      <button onclick="movePrompt()" class="border border-cdc/50 text-cc/60 font-orb px-3 py-2 text-[9px] tracking-widest hover:border-cc hover:text-cc transition-colors whitespace-nowrap">MOVER</button>
+    </div>
     <button onclick="deletePrompt()" class="w-full mt-2 border border-red-900/50 text-red-500/60 font-orb py-1.5 text-[9px] tracking-widest hover:border-red-500 hover:text-red-400 transition-colors">
       ELIMINAR SECUENCIA
     </button>
@@ -789,11 +921,52 @@ let forceEnglish = false;
 let toastTimer = null;
 
 // Historial de generaciones (sesión)
+// Anti-censura
+let acActive = false;
+let acFilters = new Set();
+
+const AC_RULES = {
+  adulto: 'Reformula cualquier contenido sexual o para adultos usando terminología artística, literaria o clínica neutra que no active filtros de contenido.',
+  violencia: 'Reformula cualquier referencia a violencia usando lenguaje cinematográfico, dramático o técnico que no active filtros de moderación.',
+  politica: 'Reformula cualquier contenido político o controvertido en términos neutros, descriptivos o académicos que eviten bloqueos ideológicos.',
+  medico: 'Reformula cualquier contenido médico sensible (drogas, síntomas, procedimientos) usando terminología científica y clínica precisa que no active filtros sanitarios.'
+};
+
+function toggleAnticensura() {
+  acActive = !acActive;
+  const panel = document.getElementById('ac-panel');
+  const indicator = document.getElementById('ac-indicator');
+  const arrow = document.getElementById('ac-arrow');
+  panel.classList.toggle('hidden', !acActive);
+  indicator.style.background = acActive ? '#ff00ff' : '';
+  indicator.style.boxShadow = acActive ? '0 0 6px #ff00ff' : '';
+  indicator.style.borderColor = acActive ? '#ff00ff' : '';
+  arrow.style.transform = acActive ? 'rotate(180deg)' : '';
+}
+
+function updateAcState(checkbox) {
+  const label = checkbox.closest('label');
+  const fill = label.querySelector('.ac-fill');
+  const box = label.querySelector('.ac-box');
+  if (checkbox.checked) {
+    acFilters.add(checkbox.value);
+    fill.classList.remove('hidden');
+    box.style.borderColor = '#ff00ff';
+    box.style.boxShadow = '0 0 6px rgba(255,0,255,0.4)';
+  } else {
+    acFilters.delete(checkbox.value);
+    fill.classList.add('hidden');
+    box.style.borderColor = '';
+    box.style.boxShadow = '';
+  }
+}
+
 let promptHistory = [];
 let historyIndex = -1;
 
 // Biblioteca con persistencia
 let folders = loadFolders();
+let activeTypeFilter = null;
 
 function loadFolders() {
   try {
@@ -840,6 +1013,25 @@ async function callGroq(messages, maxTokens = 1024, temperature = 0.7) {
 // ════════════════════════════════════════
 // TIPO DE OUTPUT
 // ════════════════════════════════════════
+const DYNAMIC_FIELDS = {
+  TEXTO: [
+    { id: 'f-tono', label: 'Tono', type: 'select', options: ['Formal','Informal','Técnico','Creativo','Humorístico','Persuasivo'] },
+    { id: 'f-longitud', label: 'Longitud', type: 'select', options: ['Breve','Medio','Largo','Muy largo'] }
+  ],
+  IMAGEN: [
+    { id: 'f-estilo', label: 'Estilo visual', type: 'select', options: ['Fotorrealista','Cinemático','Ilustración','Anime','3D render','Pintura digital','Concept art','Pixel art'] },
+    { id: 'f-ratio', label: 'Ratio', type: 'select', options: ['16:9','1:1','9:16','4:3','21:9'] }
+  ],
+  CÓDIGO: [
+    { id: 'f-lenguaje', label: 'Lenguaje / Framework', type: 'text', placeholder: 'Python, React, SQL...' },
+    { id: 'f-estructura', label: 'Estructura', type: 'select', options: ['Función','Clase','Módulo','Script','API REST','Componente'] }
+  ],
+  VÍDEO: [
+    { id: 'f-vstilo', label: 'Estilo visual', type: 'select', options: ['Cinemático','Documental','Animación 3D','Comercial','Minimalista'] },
+    { id: 'f-vduracion', label: 'Duración del clip', type: 'select', options: ['3s','5s','8s','10s'] }
+  ]
+};
+
 function selectType(type) {
   currentType = type;
   document.querySelectorAll('.type-btn').forEach(b => {
@@ -851,6 +1043,25 @@ function selectType(type) {
     b.classList.toggle('opacity-50', !active);
     b.classList.toggle('bg-transparent', !active);
   });
+  renderDynamicFields(type);
+  updateCounter();
+}
+
+function renderDynamicFields(type) {
+  const container = document.getElementById('dynamic-fields');
+  const fields = DYNAMIC_FIELDS[type] || [];
+  container.innerHTML = fields.map(f => {
+    const input = f.type === 'select'
+      ? `<select id="${f.id}" onchange="updateCounter()" class="w-full bg-cgray border border-cdc p-3 text-xs appearance-none focus:border-cc outline-none transition-all">
+          <option value="">— SELECCIONAR —</option>
+          ${f.options.map(o => `<option value="${o}">${o.toUpperCase()}</option>`).join('')}
+         </select>`
+      : `<input id="${f.id}" type="text" placeholder="${f.placeholder || ''}" oninput="updateCounter()" class="w-full bg-black/50 border border-cdc p-3 text-xs transition-all"/>`;
+    return `<div class="corner-tl corner-br pt-2">
+      <label class="text-[9px] uppercase tracking-widest opacity-60 block mb-1">${f.label}</label>
+      ${input}
+    </div>`;
+  }).join('');
 }
 
 // ════════════════════════════════════════
@@ -858,40 +1069,39 @@ function selectType(type) {
 // ════════════════════════════════════════
 function toggleEnglish() {
   forceEnglish = !forceEnglish;
-  const fill = document.getElementById("english-fill");
-  const box = document.getElementById("english-box");
-  const label = document.getElementById("english-label");
-  // Relleno del cuadrado
-  fill.style.display = forceEnglish ? 'block' : 'none';
-  fill.style.width = '8px';
-  fill.style.height = '8px';
-  fill.style.background = '#00f3ff';
-  fill.style.boxShadow = forceEnglish ? '0 0 4px #00f3ff' : 'none';
-  // Borde del cuadrado
-  box.style.borderColor = forceEnglish ? '#00f3ff' : '#00666b';
-  box.style.boxShadow = forceEnglish ? '0 0 6px rgba(0,243,255,0.4)' : 'none';
-  // Label
-  label.style.color = forceEnglish ? '#00f3ff' : '';
-  label.style.opacity = forceEnglish ? '1' : '0.5';
+  const btn = document.getElementById('english-toggle');
+  if (forceEnglish) {
+    btn.style.borderColor = '#00f3ff';
+    btn.style.color = '#00f3ff';
+    btn.style.background = 'rgba(0,243,255,0.1)';
+    btn.style.boxShadow = '0 0 8px rgba(0,243,255,0.4)';
+  } else {
+    btn.style.borderColor = '';
+    btn.style.color = '';
+    btn.style.background = '';
+    btn.style.boxShadow = '';
+  }
 }
 
 function updateCounter() {
-  const fields = ['f-objetivo','f-contexto','f-audiencia','f-formato','f-restricciones'];
-  const filled = fields.filter(id => document.getElementById(id).value.trim()).length;
-  const el = document.getElementById('field-counter');
-  el.textContent = filled + '/5 PARAMS';
-  el.style.opacity = filled > 0 ? '1' : '0.4';
-  if (filled >= 4) el.style.color = '#00f3ff';
-  else if (filled >= 2) el.style.color = '#ff00ff';
-  else el.style.color = '#ff00ff';
+  const dynFields = DYNAMIC_FIELDS[currentType] || [];
+  const allIds = ['f-objetivo', ...dynFields.map(f => f.id), 'f-restricciones'];
+  const total = allIds.length;
+  const filled = allIds.filter(id => { const el = document.getElementById(id); return el && el.value.trim(); }).length;
+  const counterEl = document.getElementById('field-counter');
+  counterEl.textContent = filled + '/' + total + ' PARAMS';
+  counterEl.style.opacity = filled > 0 ? '1' : '0.4';
+  counterEl.style.color = filled >= total - 1 ? '#00f3ff' : '#ff00ff';
 }
 
 // ════════════════════════════════════════
 // RESET CAMPOS
 // ════════════════════════════════════════
 function resetFields() {
-  ['f-objetivo','f-contexto','f-audiencia','f-formato','f-restricciones'].forEach(id => {
-    document.getElementById(id).value = '';
+  const dynFields = DYNAMIC_FIELDS[currentType] || [];
+  ['f-objetivo', ...dynFields.map(f => f.id), 'f-restricciones'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
   });
   updateCounter();
   document.getElementById('output-area').classList.add('hidden');
@@ -908,21 +1118,29 @@ async function generatePrompt(mode = 'single') {
   const objetivo = document.getElementById('f-objetivo').value.trim();
   if (!objetivo) { showToast('OBJETIVO REQUERIDO'); return; }
 
-  const contexto = document.getElementById('f-contexto').value.trim();
-  const audiencia = document.getElementById('f-audiencia').value.trim();
-  const formato = document.getElementById('f-formato').value.trim();
   const restricciones = document.getElementById('f-restricciones').value.trim();
 
   const typeMap = { TEXTO:'texto escrito', IMAGEN:'imagen generada por IA', CÓDIGO:'código', VÍDEO:'vídeo' };
   let userBase = `Objetivo: ${objetivo}`;
-  if (contexto) userBase += `\nContexto: ${contexto}`;
-  if (audiencia) userBase += `\nAudiencia: ${audiencia}`;
-  if (formato) userBase += `\nFormato: ${formato}`;
+  (DYNAMIC_FIELDS[currentType] || []).forEach(f => {
+    const el = document.getElementById(f.id);
+    const val = el ? el.value.trim() : '';
+    if (val) userBase += `\n${f.label}: ${val}`;
+  });
   if (restricciones) userBase += `\nRestricciones: ${restricciones}`;
+
+  if (acActive && acFilters.size === 0) {
+    showToast('SELECCIONA AL MENOS UN FILTRO');
+    return;
+  }
 
   const idiomaRule = forceEnglish
     ? '- OBLIGATORIO: El prompt resultante debe estar escrito ÍNTEGRAMENTE EN INGLÉS, independientemente del idioma en que estén escritos los campos del usuario.'
     : '- El prompt debe estar en el idioma más apropiado para la tarea (inglés para imagen/código, español para texto si el objetivo está en español).';
+
+  const acRules = acActive && acFilters.size > 0
+    ? '\nREGLAS ANTI-CENSURA (aplicar siempre):\n' + [...acFilters].map(f => '- ' + AC_RULES[f]).join('\n')
+    : '';
 
   const systemBase = `Eres un experto en prompt engineering. Tu tarea es generar prompts optimizados para IAs.
 Reglas absolutas:
@@ -931,16 +1149,20 @@ Reglas absolutas:
 - Para CÓDIGO: incluye lenguaje, estructura, manejo de errores, casos edge
 - Para TEXTO: incluye tono, estructura, longitud aproximada, perspectiva
 - Para VÍDEO: incluye estilo, ritmo, elementos visuales, duración
-${idiomaRule}`;
+${idiomaRule}${acRules}`;
 
   // UI: loading
   setLoading(true, mode);
 
   try {
-    if (mode === 'single') {
+    if (mode === 'single' || mode === 'detail') {
+      const userMsg = mode === 'detail'
+        ? `Genera un prompt MUY DETALLADO y exhaustivo (mínimo 5 frases, con todos los matices posibles) para obtener ${typeMap[currentType]}:\n\n${userBase}\n\nDevuelve SOLO el prompt detallado.`
+        : `Genera el mejor prompt posible para obtener ${typeMap[currentType]}:\n\n${userBase}\n\nDevuelve SOLO el prompt optimizado.`;
+
       const prompt = await callGroq([
         { role: 'system', content: systemBase },
-        { role: 'user', content: `Genera el mejor prompt posible para obtener ${typeMap[currentType]}:\n\n${userBase}\n\nDevuelve SOLO el prompt optimizado.` }
+        { role: 'user', content: userMsg }
       ]);
 
       const explanation = await callGroq([
@@ -984,7 +1206,7 @@ function setLoading(on, mode) {
   const genBtns = document.querySelectorAll('button[onclick*="generatePrompt"]');
   genBtns.forEach(b => { b.disabled = on; b.classList.toggle('opacity-50', on); });
 
-  if (mode === 'single') {
+  if (mode === 'single' || mode === 'detail') {
     const area = document.getElementById('output-area');
     const textEl = document.getElementById('output-text');
     if (on) {
@@ -1211,7 +1433,11 @@ async function executeRegen() {
     ]);
     currentPrompt = refined;
     addToHistory(refined);
-    currentExplanation += `\n\nRefinamiento: "${feedback}"`;
+    const newExplanation = await callGroq([
+      { role: 'system', content: 'Eres un experto en prompt engineering. Explica en 3-5 puntos por qué el prompt está estructurado así. Sé directo y técnico. En español.' },
+      { role: 'user', content: `Prompt refinado: "${refined}"\n\nExplica las decisiones de diseño.` }
+    ], 512, 0.5);
+    currentExplanation = newExplanation;
     textEl.classList.remove('pulse-anim');
     typeText(textEl, refined, () => updateStats(refined));
     showToast('SECUENCIA REFINADA');
@@ -1251,16 +1477,29 @@ function confirmNewFolder() {
 // ════════════════════════════════════════
 // BIBLIOTECA
 // ════════════════════════════════════════
+function setTypeFilter(type) {
+  activeTypeFilter = type;
+  document.querySelectorAll('.type-filter').forEach(btn => {
+    const isActive = btn.dataset.filter === (type || 'ALL');
+    btn.style.background = isActive ? 'rgba(0,243,255,0.1)' : '';
+    btn.style.borderColor = isActive ? '#00f3ff' : '';
+    btn.style.color = isActive ? '#00f3ff' : '';
+  });
+  renderLibrary();
+}
+
 function renderLibrary() {
   const container = document.getElementById('lib-content');
   const query = (document.getElementById('lib-search')?.value || '').toLowerCase();
 
   const filtered = folders.map(f => ({
     ...f,
-    prompts: f.prompts.filter(p =>
-      !query || p.name.toLowerCase().includes(query) || p.text.toLowerCase().includes(query)
-    )
-  })).filter(f => f.prompts.length > 0 || !query);
+    prompts: f.prompts.filter(p => {
+      const matchQuery = !query || p.name.toLowerCase().includes(query) || p.text.toLowerCase().includes(query);
+      const matchType = !activeTypeFilter || p.type === activeTypeFilter;
+      return matchQuery && matchType;
+    })
+  })).filter(f => f.prompts.length > 0 || (!query && !activeTypeFilter));
 
   const hasContent = filtered.some(f => f.prompts.length > 0);
   if (!hasContent) {
@@ -1312,7 +1551,29 @@ function viewPrompt(id) {
       currentViewPrompt = p.text;
       document.getElementById('view-title').textContent = p.name;
       document.getElementById('view-text').textContent = p.text;
+      const sel = document.getElementById('move-folder-select');
+      sel.innerHTML = folders.map(f =>
+        `<option value="${f.name}" ${f.name === folder.name ? 'disabled selected' : ''}>${f.name}${f.name === folder.name ? ' (actual)' : ''}</option>`
+      ).join('');
       openModal('modal-view');
+      return;
+    }
+  }
+}
+
+function movePrompt() {
+  const targetName = document.getElementById('move-folder-select').value;
+  for (const folder of folders) {
+    const idx = folder.prompts.findIndex(x => x.id === viewingPromptId);
+    if (idx !== -1) {
+      if (folder.name === targetName) { showToast('YA ESTÁ EN ESA CARPETA'); return; }
+      const [prompt] = folder.prompts.splice(idx, 1);
+      const target = folders.find(f => f.name === targetName);
+      if (target) target.prompts.push(prompt);
+      saveFolders();
+      closeModal('modal-view');
+      showToast('MOVIDO A ' + targetName);
+      renderLibrary();
       return;
     }
   }
@@ -1387,8 +1648,40 @@ function confirmRename() {
 }
 
 // ════════════════════════════════════════
-// EXPORTAR
+// EXPORTAR / IMPORTAR
 // ════════════════════════════════════════
+function importLibrary(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (!Array.isArray(imported)) throw new Error();
+      let added = 0;
+      imported.forEach(impFolder => {
+        const existing = folders.find(f => f.name === impFolder.name);
+        if (existing) {
+          const existingIds = new Set(existing.prompts.map(p => p.id));
+          const newPrompts = (impFolder.prompts || []).filter(p => !existingIds.has(p.id));
+          existing.prompts.push(...newPrompts);
+          added += newPrompts.length;
+        } else {
+          folders.push(impFolder);
+          added += (impFolder.prompts || []).length;
+        }
+      });
+      saveFolders();
+      renderLibrary();
+      showToast(added + ' PROMPTS IMPORTADOS');
+    } catch {
+      showToast('ARCHIVO INVÁLIDO');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
 function exportLibrary() {
   const data = JSON.stringify(folders, null, 2);
   const blob = new Blob([data], { type: 'application/json' });
@@ -1456,6 +1749,46 @@ function sendToGenerator() {
   showToast('CARGADO EN GENERADOR');
 }
 
+async function autoImprovePrompt() {
+  const original = document.getElementById('analyze-input').value.trim();
+  const improvements = document.getElementById('analyze-improvements').textContent.trim();
+  if (!original || !improvements) return;
+
+  const btn = document.getElementById('btn-autoimprove');
+  btn.disabled = true; btn.classList.add('opacity-50');
+  document.getElementById('autoimprove-result').classList.add('hidden');
+
+  try {
+    const improved = await callGroq([
+      { role: 'system', content: 'Eres un experto en prompt engineering. Reescribe el prompt aplicando todas las mejoras indicadas. Devuelve SOLO el prompt mejorado, sin explicaciones ni introducciones.' },
+      { role: 'user', content: `Prompt original:\n"${original}"\n\nMejoras a aplicar:\n${improvements}\n\nDevuelve el prompt mejorado y optimizado.` }
+    ]);
+
+    const textEl = document.getElementById('autoimprove-text');
+    document.getElementById('autoimprove-result').classList.remove('hidden');
+    typeText(textEl, improved);
+  } catch(e) {
+    showToast('ERROR DE CONEXIÓN');
+  }
+  btn.disabled = false; btn.classList.remove('opacity-50');
+}
+
+function copyAutoImproved() {
+  const text = document.getElementById('autoimprove-text').textContent;
+  if (!text) return;
+  navigator.clipboard.writeText(text).catch(() => {});
+  showToast('COPIADO AL PORTAPAPELES');
+}
+
+function sendAutoImprovedToGenerator() {
+  const text = document.getElementById('autoimprove-text').textContent;
+  if (!text) return;
+  document.getElementById('f-objetivo').value = text;
+  updateCounter();
+  showPage('gen');
+  showToast('CARGADO EN GENERADOR');
+}
+
 // ════════════════════════════════════════
 // PROMPT INVERSO
 // ════════════════════════════════════════
@@ -1504,7 +1837,7 @@ function showPage(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
 
-  const navIds = ['gen','lib','analyze','reverse'];
+  const navIds = ['gen','lib','analyze','reverse','seq'];
   navIds.forEach(id => {
     const btn = document.getElementById('nav-' + id);
     if (!btn) return;
@@ -1562,7 +1895,131 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.add('hidden'), 2000);
 }
 
+// ════════════════════════════════════════
+// SECUENCIA
+// ════════════════════════════════════════
+let seqEnfoque = 'B';
+
+function selectEnfoque(e) {
+  seqEnfoque = e;
+  ['A','B'].forEach(x => {
+    const btn = document.getElementById('enfoque-' + x);
+    const active = x === e;
+    btn.style.borderColor = active ? '#00f3ff' : '';
+    btn.style.color = active ? '#00f3ff' : '';
+    btn.style.background = active ? 'rgba(0,243,255,0.1)' : '';
+  });
+  document.getElementById('enfoque-desc').textContent = e === 'B'
+    ? 'Cada escena hereda el universo base y solo describe la acción/cambio. Más consistente.'
+    : 'Cada escena tiene su propio prompt completo e independiente. Más control por escena.';
+  if (document.getElementById('seq-scenes').children.length > 0) buildScenes();
+}
+
+function buildScenes() {
+  const n = Math.min(20, Math.max(2, parseInt(document.getElementById('seq-nescenas').value) || 3));
+  const durGlobal = document.getElementById('seq-duracion').value;
+  const label = seqEnfoque === 'B' ? 'Acción / cambio' : 'Descripción completa';
+  const container = document.getElementById('seq-scenes');
+  container.innerHTML = Array.from({length: n}, (_, i) => `
+    <div class="border border-cdc/40 p-3 bg-black/20">
+      <div class="flex justify-between items-center mb-2">
+        <span class="text-[9px] font-orb text-cm uppercase tracking-widest">ESCENA ${i+1}</span>
+        <div class="flex items-center gap-1">
+          <span class="text-[8px] opacity-30">DUR:</span>
+          <select id="seq-dur-${i}" class="bg-cgray border border-cdc/40 text-[9px] px-1 py-0.5 appearance-none focus:border-cc outline-none transition-all">
+            <option value="">↳ global (${durGlobal})</option>
+            <option value="3s">3s</option>
+            <option value="5s">5s</option>
+            <option value="8s">8s</option>
+            <option value="10s">10s</option>
+          </select>
+        </div>
+      </div>
+      <textarea id="seq-scene-${i}" rows="2" placeholder="${label} de la escena ${i+1}..."
+        class="w-full bg-black/50 border border-cdc/30 p-2 text-xs text-white/90 resize-none focus:border-cc outline-none transition-all"></textarea>
+    </div>
+  `).join('');
+  document.getElementById('btn-seq-gen').classList.remove('hidden');
+  document.getElementById('seq-output').classList.add('hidden');
+}
+
+async function generateSequence() {
+  const universo = document.getElementById('seq-universo').value.trim();
+  if (!universo) { showToast('UNIVERSO REQUERIDO'); return; }
+  const n = Math.min(20, Math.max(2, parseInt(document.getElementById('seq-nescenas').value) || 3));
+  const herramienta = document.getElementById('seq-herramienta').value;
+  const durGlobal = document.getElementById('seq-duracion').value;
+  const scenes = Array.from({length: n}, (_, i) => ({
+    text: document.getElementById('seq-scene-' + i)?.value.trim() || '',
+    dur: document.getElementById('seq-dur-' + i)?.value || durGlobal
+  }));
+  if (scenes.some(s => !s.text)) { showToast('COMPLETA TODAS LAS ESCENAS'); return; }
+
+  const btn = document.getElementById('btn-seq-gen');
+  btn.disabled = true; btn.classList.add('opacity-50');
+  btn.textContent = 'GENERANDO...';
+
+  const scenesDesc = scenes.map((s, i) => `Escena ${i+1} (${s.dur}): ${s.text}`).join('\n');
+  const systemPrompt = seqEnfoque === 'B'
+    ? `Eres experto en prompt engineering para vídeo IA. Genera ${n} prompts de vídeo para ${herramienta}, uno por escena, integrando el universo base en cada uno. Cada prompt incluye el universo + la acción específica + duración. Formato estricto sin texto adicional:\nESCENA_1: [prompt]\nESCENA_2: [prompt]\nhasta ESCENA_${n}.`
+    : `Eres experto en prompt engineering para vídeo IA. Genera ${n} prompts de vídeo independientes y completos para ${herramienta}, optimizados para la herramienta indicada. Formato estricto sin texto adicional:\nESCENA_1: [prompt]\nESCENA_2: [prompt]\nhasta ESCENA_${n}.`;
+  const userMsg = seqEnfoque === 'B'
+    ? `Universo base:\n${universo}\n\nEscenas:\n${scenesDesc}`
+    : `Escenas:\n${scenesDesc}\n\nContexto general:\n${universo}`;
+
+  try {
+    const result = await callGroq([
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMsg }
+    ], 2048, 0.7);
+
+    const prompts = Array.from({length: n}, (_, i) => {
+      const match = result.match(new RegExp(`ESCENA_${i+1}:\\s*([\\s\\S]*?)(?=ESCENA_${i+2}:|$)`));
+      return match ? match[1].trim() : '—';
+    });
+    showSequenceOutput(prompts, scenes);
+  } catch(e) {
+    showToast('ERROR DE CONEXIÓN');
+  }
+  btn.disabled = false; btn.classList.remove('opacity-50');
+  btn.textContent = 'GENERAR SECUENCIA';
+}
+
+function showSequenceOutput(prompts, scenes) {
+  const container = document.getElementById('seq-prompts');
+  container.innerHTML = prompts.map((p, i) => `
+    <div class="border border-cdc/40 bg-black/30 p-3">
+      <div class="flex justify-between items-center mb-2">
+        <span class="text-[9px] font-orb text-cm uppercase tracking-widest">ESCENA ${i+1}</span>
+        <div class="flex items-center gap-2">
+          <span class="text-[8px] opacity-30">${scenes[i].dur}</span>
+          <button onclick="copySeqPrompt(${i})" class="text-[8px] border border-cdc/50 px-1.5 py-0.5 text-cc/60 hover:border-cc hover:text-cc transition-colors">COPIAR</button>
+        </div>
+      </div>
+      <p id="seq-prompt-${i}" class="text-xs text-white/85 italic leading-relaxed">${p}</p>
+    </div>
+  `).join('');
+  document.getElementById('seq-output').classList.remove('hidden');
+  document.getElementById('seq-output').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function copySeqPrompt(i) {
+  const text = document.getElementById('seq-prompt-' + i)?.textContent;
+  if (!text) return;
+  navigator.clipboard.writeText(text).catch(() => {});
+  showToast('ESCENA ' + (i+1) + ' COPIADA');
+}
+
+function copyAllSequence() {
+  const items = document.querySelectorAll('[id^="seq-prompt-"]');
+  const parts = Array.from(items).map((el, i) => `ESCENA ${i+1}:\n${el.textContent}`);
+  navigator.clipboard.writeText(parts.join('\n\n')).catch(() => {});
+  showToast('SECUENCIA COMPLETA COPIADA');
+}
+
 // Init
+renderDynamicFields(currentType);
+updateCounter();
 renderLibrary();
 </script>
 </body>
