@@ -241,34 +241,30 @@ input,textarea,select{color:#e5e5e5}
       <div id="ac-panel" class="hidden border border-cdc/30 border-t-0 bg-black/30 p-3">
         <p class="text-[8px] opacity-40 mb-3 uppercase tracking-widest">Selecciona los filtros a esquivar — el prompt se reformulará evitando esos bloqueos</p>
         <div class="grid grid-cols-2 gap-2">
-          <label class="ac-check flex items-center gap-2 cursor-pointer group/c">
-            <div class="ac-box w-3 h-3 border border-cdc/60 flex items-center justify-center transition-all group-hover/c:border-cm">
-              <div class="ac-fill w-2 h-2 bg-cm hidden" style="box-shadow:0 0 4px #ff00ff"></div>
+          <div onclick="toggleAcFilter(this,'adulto')" class="ac-item flex items-center gap-2 cursor-pointer py-1">
+            <div class="ac-box w-3 h-3 border border-cdc/60 flex items-center justify-center flex-shrink-0 transition-all">
+              <div class="ac-fill w-2 h-2 bg-cm" style="display:none;box-shadow:0 0 4px #ff00ff"></div>
             </div>
-            <span class="text-[10px] text-white/60 group-hover/c:text-white/90 transition-colors">Contenido adulto</span>
-            <input type="checkbox" value="adulto" onchange="updateAcState(this)" class="hidden"/>
-          </label>
-          <label class="ac-check flex items-center gap-2 cursor-pointer group/c">
-            <div class="ac-box w-3 h-3 border border-cdc/60 flex items-center justify-center transition-all group-hover/c:border-cm">
-              <div class="ac-fill w-2 h-2 bg-cm hidden" style="box-shadow:0 0 4px #ff00ff"></div>
+            <span class="ac-label text-[10px] text-white/50 transition-colors">Contenido adulto</span>
+          </div>
+          <div onclick="toggleAcFilter(this,'violencia')" class="ac-item flex items-center gap-2 cursor-pointer py-1">
+            <div class="ac-box w-3 h-3 border border-cdc/60 flex items-center justify-center flex-shrink-0 transition-all">
+              <div class="ac-fill w-2 h-2 bg-cm" style="display:none;box-shadow:0 0 4px #ff00ff"></div>
             </div>
-            <span class="text-[10px] text-white/60 group-hover/c:text-white/90 transition-colors">Violencia</span>
-            <input type="checkbox" value="violencia" onchange="updateAcState(this)" class="hidden"/>
-          </label>
-          <label class="ac-check flex items-center gap-2 cursor-pointer group/c">
-            <div class="ac-box w-3 h-3 border border-cdc/60 flex items-center justify-center transition-all group-hover/c:border-cm">
-              <div class="ac-fill w-2 h-2 bg-cm hidden" style="box-shadow:0 0 4px #ff00ff"></div>
+            <span class="ac-label text-[10px] text-white/50 transition-colors">Violencia</span>
+          </div>
+          <div onclick="toggleAcFilter(this,'politica')" class="ac-item flex items-center gap-2 cursor-pointer py-1">
+            <div class="ac-box w-3 h-3 border border-cdc/60 flex items-center justify-center flex-shrink-0 transition-all">
+              <div class="ac-fill w-2 h-2 bg-cm" style="display:none;box-shadow:0 0 4px #ff00ff"></div>
             </div>
-            <span class="text-[10px] text-white/60 group-hover/c:text-white/90 transition-colors">Política</span>
-            <input type="checkbox" value="politica" onchange="updateAcState(this)" class="hidden"/>
-          </label>
-          <label class="ac-check flex items-center gap-2 cursor-pointer group/c">
-            <div class="ac-box w-3 h-3 border border-cdc/60 flex items-center justify-center transition-all group-hover/c:border-cm">
-              <div class="ac-fill w-2 h-2 bg-cm hidden" style="box-shadow:0 0 4px #ff00ff"></div>
+            <span class="ac-label text-[10px] text-white/50 transition-colors">Política</span>
+          </div>
+          <div onclick="toggleAcFilter(this,'medico')" class="ac-item flex items-center gap-2 cursor-pointer py-1">
+            <div class="ac-box w-3 h-3 border border-cdc/60 flex items-center justify-center flex-shrink-0 transition-all">
+              <div class="ac-fill w-2 h-2 bg-cm" style="display:none;box-shadow:0 0 4px #ff00ff"></div>
             </div>
-            <span class="text-[10px] text-white/60 group-hover/c:text-white/90 transition-colors">Temas médicos</span>
-            <input type="checkbox" value="medico" onchange="updateAcState(this)" class="hidden"/>
-          </label>
+            <span class="ac-label text-[10px] text-white/50 transition-colors">Temas médicos</span>
+          </div>
         </div>
       </div>
     </section>
@@ -944,20 +940,22 @@ function toggleAnticensura() {
   arrow.style.transform = acActive ? 'rotate(180deg)' : '';
 }
 
-function updateAcState(checkbox) {
-  const label = checkbox.closest('label');
-  const fill = label.querySelector('.ac-fill');
-  const box = label.querySelector('.ac-box');
-  if (checkbox.checked) {
-    acFilters.add(checkbox.value);
-    fill.classList.remove('hidden');
-    box.style.borderColor = '#ff00ff';
-    box.style.boxShadow = '0 0 6px rgba(255,0,255,0.4)';
-  } else {
-    acFilters.delete(checkbox.value);
-    fill.classList.add('hidden');
+function toggleAcFilter(el, value) {
+  const fill = el.querySelector('.ac-fill');
+  const box = el.querySelector('.ac-box');
+  const label = el.querySelector('.ac-label');
+  if (acFilters.has(value)) {
+    acFilters.delete(value);
+    fill.style.display = 'none';
     box.style.borderColor = '';
     box.style.boxShadow = '';
+    label.style.color = '';
+  } else {
+    acFilters.add(value);
+    fill.style.display = 'block';
+    box.style.borderColor = '#ff00ff';
+    box.style.boxShadow = '0 0 6px rgba(255,0,255,0.4)';
+    label.style.color = '#ff00ff';
   }
 }
 
