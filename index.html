@@ -242,28 +242,28 @@ input,textarea,select{color:#e5e5e5}
         <p class="text-[8px] opacity-40 mb-3 uppercase tracking-widest">Selecciona los filtros a esquivar — el prompt se reformulará evitando esos bloqueos</p>
         <div class="grid grid-cols-2 gap-2">
           <div onclick="toggleAcFilter(this,'adulto')" class="ac-item flex items-center gap-2 cursor-pointer py-1">
-            <div class="ac-box w-3 h-3 border border-cdc/60 flex items-center justify-center flex-shrink-0 transition-all">
-              <div class="ac-fill w-2 h-2 bg-cm" style="display:none;box-shadow:0 0 4px #ff00ff"></div>
+            <div class="ac-box" style="width:14px;height:14px;border:1px solid #00666b;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color 0.2s">
+              <div class="ac-fill" style="display:none;width:8px;height:8px;background:#ff00ff;box-shadow:0 0 4px #ff00ff"></div>
             </div>
-            <span class="ac-label text-[10px] text-white/50 transition-colors">Contenido adulto</span>
+            <span class="ac-label" style="font-size:10px;color:rgba(255,255,255,0.5);transition:color 0.2s">Contenido adulto</span>
           </div>
           <div onclick="toggleAcFilter(this,'violencia')" class="ac-item flex items-center gap-2 cursor-pointer py-1">
-            <div class="ac-box w-3 h-3 border border-cdc/60 flex items-center justify-center flex-shrink-0 transition-all">
-              <div class="ac-fill w-2 h-2 bg-cm" style="display:none;box-shadow:0 0 4px #ff00ff"></div>
+            <div class="ac-box" style="width:14px;height:14px;border:1px solid #00666b;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color 0.2s">
+              <div class="ac-fill" style="display:none;width:8px;height:8px;background:#ff00ff;box-shadow:0 0 4px #ff00ff"></div>
             </div>
-            <span class="ac-label text-[10px] text-white/50 transition-colors">Violencia</span>
+            <span class="ac-label" style="font-size:10px;color:rgba(255,255,255,0.5);transition:color 0.2s">Violencia</span>
           </div>
           <div onclick="toggleAcFilter(this,'politica')" class="ac-item flex items-center gap-2 cursor-pointer py-1">
-            <div class="ac-box w-3 h-3 border border-cdc/60 flex items-center justify-center flex-shrink-0 transition-all">
-              <div class="ac-fill w-2 h-2 bg-cm" style="display:none;box-shadow:0 0 4px #ff00ff"></div>
+            <div class="ac-box" style="width:14px;height:14px;border:1px solid #00666b;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color 0.2s">
+              <div class="ac-fill" style="display:none;width:8px;height:8px;background:#ff00ff;box-shadow:0 0 4px #ff00ff"></div>
             </div>
-            <span class="ac-label text-[10px] text-white/50 transition-colors">Política</span>
+            <span class="ac-label" style="font-size:10px;color:rgba(255,255,255,0.5);transition:color 0.2s">Política</span>
           </div>
           <div onclick="toggleAcFilter(this,'medico')" class="ac-item flex items-center gap-2 cursor-pointer py-1">
-            <div class="ac-box w-3 h-3 border border-cdc/60 flex items-center justify-center flex-shrink-0 transition-all">
-              <div class="ac-fill w-2 h-2 bg-cm" style="display:none;box-shadow:0 0 4px #ff00ff"></div>
+            <div class="ac-box" style="width:14px;height:14px;border:1px solid #00666b;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color 0.2s">
+              <div class="ac-fill" style="display:none;width:8px;height:8px;background:#ff00ff;box-shadow:0 0 4px #ff00ff"></div>
             </div>
-            <span class="ac-label text-[10px] text-white/50 transition-colors">Temas médicos</span>
+            <span class="ac-label" style="font-size:10px;color:rgba(255,255,255,0.5);transition:color 0.2s">Temas médicos</span>
           </div>
         </div>
       </div>
@@ -325,7 +325,7 @@ input,textarea,select{color:#e5e5e5}
         GENERAR
       </button>
       <button onclick="toggleEnglish()" id="english-toggle"
-        class="px-4 py-3 border border-cdc text-cc/50 font-orb font-bold text-[10px] tracking-widest hover:border-cc hover:text-cc transition-all"
+        style="padding:0.75rem 1rem;border:1px solid #00666b;color:rgba(0,243,255,0.3);font-family:Orbitron,sans-serif;font-weight:700;font-size:10px;letter-spacing:0.1em;background:transparent;transition:all 0.2s;position:relative"
         title="Generar prompt en inglés">EN</button>
       <button onclick="generatePrompt('detail')" id="btn-detallar" class="flex-1 border border-cc text-cc font-orb font-bold py-3 clip-l hover:bg-cc/10 active:scale-[0.98] transition-all text-xs tracking-widest italic uppercase">
         DETALLAR
@@ -1071,13 +1071,15 @@ function toggleEnglish() {
   if (forceEnglish) {
     btn.style.borderColor = '#00f3ff';
     btn.style.color = '#00f3ff';
-    btn.style.background = 'rgba(0,243,255,0.1)';
-    btn.style.boxShadow = '0 0 8px rgba(0,243,255,0.4)';
+    btn.style.background = 'rgba(0,243,255,0.15)';
+    btn.style.boxShadow = '0 0 10px rgba(0,243,255,0.5), inset 0 0 6px rgba(0,243,255,0.1)';
+    btn.style.textShadow = '0 0 8px #00f3ff';
   } else {
-    btn.style.borderColor = '';
-    btn.style.color = '';
-    btn.style.background = '';
-    btn.style.boxShadow = '';
+    btn.style.borderColor = '#00666b';
+    btn.style.color = 'rgba(0,243,255,0.3)';
+    btn.style.background = 'transparent';
+    btn.style.boxShadow = 'none';
+    btn.style.textShadow = 'none';
   }
 }
 
